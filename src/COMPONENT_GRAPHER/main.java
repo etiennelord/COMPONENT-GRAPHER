@@ -146,6 +146,7 @@ public class main {
           System.out.println("\tmatrixfile : a nexus or phylip matrix to analyse.");      
           
           System.out.println("Options :");
+          System.out.println("\t-taxa=list   : Specify some taxas tagged in the summary file\n\t\t\t(list separated by comma e.g. A,B,C).");
           System.out.println("\t-maxiter     : Maximum number of iteration to search in case of \n\t\t\tundefined states in the input matrix (e.g. {1,2,3}).");
           System.out.println("\t-undefined   : Remove column containing undefined states (e.g. ?,-)");
           System.out.println("\t-multiple    : Remove column containing multiple states (e.g. {1,2,3}).");          
