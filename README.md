@@ -2,25 +2,27 @@
 
 ## About
 
+This is the source code and some sample matrices for the COMPONENT-GRAPHER software.
+
+The COMPONENT-GRAPHER software generates networks containing: perfect, inclusion, partial concomitant links between character-states.
+
 ## Usage
 
 COMPONENT-GRAPHER is a command-line tool programmed in Java. 
 
-1. First obtain a [binary release](#binary-releases).
+1. First obtain a [binary release](#binary-releases) or [compile](#Compilation) your own version.
 2. Typical command-line to analyse a morphological matrix are:
 
-A)  
+A) Create the networks and export as graphml files 
 
 ```
-
-
+java -jar COMPONENT-GRAPHER.jar example/Sample.txt -graphml
 ```
 
-B)
+B) Processing the Smith-Caron sample matrix and generate a summary of the results.
 
 ```
-
-
+java -Xms=2G -Xmx=4G -jar COMPONENT-GRAPHER.jar example/Smith_Caron.nex -summary
 ```
 
 ### Binary releases
@@ -29,11 +31,9 @@ COMPONENT-GRAPHER is compatible with Java SE5 (JDK 5) and later versions of Java
 Java platform is available at
 [Oracle](http://www.oracle.com/technetwork/java/javase/downloads/index.html).
 
-
-
-
-
 ## Compilation
+
+The source code is distributed as  Netbeans project format. 
 
 ## Dependencies
 
