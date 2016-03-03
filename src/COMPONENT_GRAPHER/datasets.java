@@ -33,6 +33,8 @@ import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import umontreal.iro.lecuyer.rng.LFSR258;
+import umontreal.iro.lecuyer.rng.RandomStreamBase;
 import umontreal.iro.lecuyer.util.BitVector;
 
 /**
@@ -896,7 +898,9 @@ String[][] charmatrix() {
                   String taxas=this.get_taxa(n.identification).toLowerCase();                                    
                   ArrayList<Integer> contains_total=(ArrayList<Integer>)util.intersection(n.identification,taxa_pos);                  
                   boolean contain_taxa=!contains_total.isEmpty();
-                  float percent_contains=contains_total.size()*100/n.identification.size();
+                  float ft=n.identification.size();
+                  if (ft==0) ft=1;
+                  float percent_contains=contains_total.size()*100/ft;
                   
                   //taxas.indexOf(this.taxa.toLowerCase())>-1);
                   //if (this.taxa.length()==0) contain_taxa=false;
@@ -1383,8 +1387,9 @@ String[][] charmatrix() {
                 for (int i=0; i<states.size();i++) {
                       state s=states.get(i);
                       //--Randomly pick a state
-                      Random r=new Random();
-                      int pos=r.nextInt(s.state.length());
+                       LFSR258  r=new  LFSR258();
+                      
+                      int pos=r.nextInt(0,s.state.length()-1);
                       current_state+=s.state.charAt(pos);
                       this.current_state_matrix[s.pos_i][s.pos_j]=""+s.state.charAt(pos);
                   }
