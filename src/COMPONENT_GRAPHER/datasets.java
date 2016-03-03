@@ -65,12 +65,13 @@ public class datasets {
    public String taxa="";
    
    public String tmpfile="";
+   public String commandline="";
    public int maxiter=1;
    util output_biparition_complete=new util();
    util output_biparition_1=new util();
    util output_biparition_2=new util();
    util output_biparition_3=new util();
-   
+   StringBuilder st_option=new StringBuilder(); //--Selected options
    
    /////////////////////////////////////////////////////////////////////////////
    /// VARIABLES - Datasets
@@ -411,7 +412,8 @@ String[][] charmatrix() {
               } catch(Exception e) {
                   return false;
               }
-        System.out.println("Input                                : "+filename);       
+          st_option.append("Input                                : "+filename+"\n");
+          System.out.println("Input                                : "+filename);       
         return true;   	
      }
      
@@ -530,6 +532,16 @@ String[][] charmatrix() {
        System.out.println("Total multiple column(s)             : "+total_multiple_column);
        System.out.println("Total undefined char                 : "+total_undefined);
        System.out.println("Total multiple char                  : "+total_multiple);
+       
+         st_option.append("N taxa                               : "+this.ntax+" (rows)\n");
+        st_option.append("N characters                         : "+this.nchar+" (columns)\n");
+        //--Create the various state matrix         
+        st_option.append("Total number of multistate characters: "+ this.states.size()+"\n");
+        st_option.append("Total number of possible variations  : "+((int)this.total_states+"\n"));               
+        st_option.append("Total undefined column(s)            : "+total_undefined_column+"\n");
+        st_option.append("Total multiple column(s)             : "+total_multiple_column+"\n");
+        st_option.append("Total undefined char                 : "+total_undefined+"\n");
+       st_option.append("Total multiple char                  : "+total_multiple+"\n");
    }
    /**
     * This is the main computing routine 
@@ -552,8 +564,17 @@ String[][] charmatrix() {
       //(min. rand index: "+this.min_rand_index+", min. shared taxa (%): "+this.min_taxa_percent);       
       System.out.println("Remove multiple state columns        : "+this.remove_multiple_column);
       System.out.println("Remove undefined columns             : "+this.remove_undefined_column);
+        st_option.append("Remove multiple state columns        : "+this.remove_multiple_column+"\n");
+        st_option.append("Remove undefined columns             : "+this.remove_undefined_column+"\n");
+       
+    
+                     
+
       if (this.remove_multiple_column) this.maxiter=1;
-      if (this.maxiter>1&&remove_multiple_column) System.out.println("Max. iteration (if multiple states): "+this.maxiter);      
+      if (this.maxiter>1&&remove_multiple_column) {
+          System.out.println("Max. iteration (if multiple states): "+this.maxiter);
+          st_option.append("Max. iteration (if multiple states): "+this.maxiter);
+      }      
       compute_partition();            
   }
   
@@ -603,6 +624,8 @@ String[][] charmatrix() {
       
       try {
           PrintWriter pw=new PrintWriter(new FileWriter(new File(filename+"_stat.txt")));
+          
+          pw.println(st_option);
           pw.println(st);
           pw.close();
       } catch(Exception e) {}
@@ -1214,7 +1237,8 @@ String[][] charmatrix() {
             pw.close();     
             //--Dict
             Collections.sort(nodes);
-             pw=new PrintWriter(new FileWriter(new File(filename+"_id.txt")));                                       
+             pw=new PrintWriter(new FileWriter(new File(filename+"_id.txt")));      
+                pw.println("#node_id\tcomplete_name\tchar_label\tstate_label\tn.state_in_matrix\tedgecount\tin_edgecount\tout_edgecount\tnumber_of_taxa\ttaxa");
                 for (node n:nodes) pw.println(n.id+"\t"+n.complete_name+"\t"+n.char_label+"\t"+n.state_label+"\t"+n.state_matrix+"\t"+n.edgecount+"\t"+n.in_edgecount+"\t"+n.out_edgecount+"\t"+n.identification.size()+"\t"+get_taxa(n.identification));
             pw.close();
 

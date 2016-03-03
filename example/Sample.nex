@@ -1,0 +1,14 @@
+#NEXUS
+[Note: this is a sample matrix]
+begin data;
+  dimensions ntax=5; 
+  dimensions nchar=6;
+  format datatype=standard gap=- missing=? Interleave=no;
+  MATRIX
+    A    110110
+	B    110000
+	C    100110
+	D    001001
+	E    001110    
+	;
+end;

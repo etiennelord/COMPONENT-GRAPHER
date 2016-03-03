@@ -34,7 +34,7 @@ public class main {
         ///////////////////////////////////////////////////////////////////////
         /// VERSION
         public static String version="1.0.0";
-        public static String authors="Etienne Lord, Jananan Pathmanathan, François-Joseph Lapointe, Éric Bapteste";
+        public static String authors="Etienne Lord, Jananan Pathmanathan, Vladimir Makarenkov,\nFrançois-Joseph Lapointe, Éric Bapteste";
         
     /**
      * This is the main class which parse the different args parameters
@@ -67,17 +67,18 @@ public class main {
       if (args.length==0||args[0].equalsIgnoreCase("-h")||args[0].equalsIgnoreCase("-help")) help();
       String filename=args[0];
       
-      //--remove filename extension
-      if (filename.indexOf(".")>0) filename=filename.substring(0, filename.lastIndexOf("."));
       //--Defautl output filename directory
-      String outfile=filename;  
-      
+        
+        d.commandline=util.string(args);
         System.out.println("COMPONENT-GRAPHER v"+version+"\n"+authors);
         System.out.println("=============================== PARAMETERS ====================================");
-        System.out.println("Command line options                 : "+util.string(args));         
+        System.out.println("Command line options                 : "+d.commandline);         
+        d.st_option.append("COMPONENT-GRAPHER v"+version+"\n"+authors+"\n");
+        d.st_option.append("=============================== PARAMETERS ====================================\n");
+        d.st_option.append("Command line options                 : "+d.commandline+"\n");         
         //--Load the datafile
         boolean r=d.load_morphobank_nexus(args[0]);               
-         if (!r||d.nchar==0||d.ntax==0) r=d.load_simple(args[0]);
+         if (!r||d.nchar==0||d.ntax==0) r=d.load_simple(filename);
          if (!r||d.nchar==0||d.ntax==0) {
              System.out.println("No file found.");
              System.exit(-1);
@@ -88,7 +89,7 @@ public class main {
         // Read command line option
         for (String st:args) {
             String s=st.toLowerCase();
-            if (s.indexOf("-output=")>-1) outfile=st.substring(8);         
+            if (s.indexOf("-output=")>-1) filename=st.substring(8);         
             if (s.indexOf("-minrand=")>-1) minrand=Double.valueOf(st.substring(9));
             if (s.indexOf("-maxiter=")>-1) maxiter=Integer.valueOf(st.substring(9));
             if (s.indexOf("-mintaxa=")>-1) minrand=Integer.valueOf(st.substring(9));
@@ -110,6 +111,7 @@ public class main {
             }
         } 
          
+         d.filename=filename;
          d.nooutput=nooutput;
          d.bipartite=bipartite;
          d.save_graphml=save_graphml;
@@ -138,10 +140,10 @@ public class main {
          System.out.println("========================== COMMAND-LINE OPTIONS ===============================");
          System.out.println("Usage:\n");
           
-          System.out.println("java -Xms2G -Xmx8G COMPONENT-GRAPHER.jar matrixfile \n");
+          System.out.println("java -Xms2g -Xmx8g COMPONENT-GRAPHER.jar matrixfile \n");
           
           System.out.println("Arguments:");
-          System.out.println("\tmatrixfile : a nexus or matrix file to analyse.");      
+          System.out.println("\tmatrixfile : a nexus or phylip matrix to analyse.");      
           
           System.out.println("Options :");
           System.out.println("\t-maxiter     : Maximum number of iteration to search in case of \n\t\t\tundefined states in the input matrix (e.g. {1,2,3}).");
@@ -154,7 +156,7 @@ public class main {
          
           System.out.println("================================= OUTPUTS =====================================");
           System.out.println("\nFor each iteration (see maxiter parameter) :\n");
-          System.out.println("\tmatrixfile_XXX_complet.txt : edge-list of the complete network (types 1,2,3).");
+          System.out.println("\tmatrixfile_XXX_complete.txt : edge-list of the complete network (types 1,2,3).");
           System.out.println("\tmatrixfile_XXX_1.txt       : edge-list of the type 1 connections.");
           System.out.println("\tmatrixfile_XXX_2.txt       : edge-list of the type 2 connections.");
           System.out.println("\tmatrixfile_XXX_3.txt       : edge-list of the type 3 connection.");
@@ -162,7 +164,7 @@ public class main {
           System.out.println("\tmatrixfile_XXX_stat.txt    : statistics and parameters for this run.");
           System.out.println("\t*XXX will be replace by the run used caracters in the matrix, \n\t or by nothing. ");
           System.out.println("\nIf the [-bipartite] option is use, the following files will also be produced:");
-          System.out.println("\tmatrixfile.bipartite_XXX_complet.txt : bipartite graph of the complete network.");
+          System.out.println("\tmatrixfile.bipartite_XXX_complete.txt : bipartite graph of the complete network.");
           System.out.println("\tmatrixfile.bipartite_XXX_1.txt       : bipartite graph of the type 1 connections.");
           System.out.println("\tmatrixfile.bipartite_XXX_2.txt       : bipartite graph of the type 2 connections.");
           System.out.println("\tmatrixfile.bipartite_XXX_3.txt       : bipartite graph of the type 3 connection.");
@@ -170,7 +172,7 @@ public class main {
           System.out.println("\nIf the [-summary] option is use, the following file will also be produced:");
           System.out.println("\tmatrixfile_XXX_summary.txt           : summary statistics for this run.");
           System.out.println("\nIf the [-graphml] option is use, the following file will also be produced:");
-          System.out.println("\tmatrixfile_XXX_complet.graphml");
+          System.out.println("\tmatrixfile_XXX_complete.graphml");
           System.out.println("\tmatrixfile_XXX_1.graphml");
           System.out.println("\tmatrixfile_XXX_2.graphml");
           System.out.println("\tmatrixfile_XXX_3.graphml");
