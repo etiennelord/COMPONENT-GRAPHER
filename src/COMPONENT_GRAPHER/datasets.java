@@ -19,6 +19,7 @@ package COMPONENT_GRAPHER;
  */
 
 
+import static COMPONENT_GRAPHER.util.isNumber;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -42,6 +43,7 @@ import umontreal.iro.lecuyer.util.BitVector;
  * @since October/November 2015, 2016
  */
 public class datasets {
+    
    /////////////////////////////////////////////////////////////////////////////
    /// OPTIONS 
    public double min_rand_index=0.0;
@@ -64,7 +66,7 @@ public class datasets {
    
    public String tmpfile="";
    public int maxiter=1;
-   util output_biparition_complet=new util();
+   util output_biparition_complete=new util();
    util output_biparition_1=new util();
    util output_biparition_2=new util();
    util output_biparition_3=new util();
@@ -77,6 +79,7 @@ public class datasets {
    public HashMap<String, Integer> index_label=new HashMap<String, Integer>();
    public ArrayList<String> label=new ArrayList<String>(); //--Taxa name
    public ArrayList<String> state=new ArrayList<String>(); //--line of char. for the taxa 
+   public static Pattern isNumbers=Pattern.compile("([0-9]{1,})\\s*([0-9]{1,})");   
    public String title="";
    public String filename="";   
    public int ntax=0;
@@ -382,14 +385,23 @@ String[][] charmatrix() {
 
    boolean load_simple(String filename) {  
 	this.filename=filename;
-       ArrayList<String> data=loadStrings(filename);
+       
+        ArrayList<String> data=loadStrings(filename);
         if (data.isEmpty()) return false;
         for (int i=0; i<data.size();i++) {
            String line=data.get(i).trim();
-            ArrayList<String> d=extract_matrix(line);            
-                 label.add(d.get(0));	
-		  state.add(d.get(1));	
-            }   
+           //--Do we have a phylip file ? 
+           
+            Matcher m=isNumbers.matcher(line);
+            if (m.find()&&i==0)  {
+                //--Skip line
+            } else {                
+                  ArrayList<String> d=extract_matrix(line);            
+                  label.add(d.get(0));	
+                  state.add(d.get(1));	
+             }   
+        }
+            
         ntax=label.size();
         nchar=intmaxcol();
         this.char_matrix=charmatrix();
@@ -600,8 +612,8 @@ String[][] charmatrix() {
           Integer[] CC_info_type1;
           boolean[] local_articulation_point=new boolean[nodes.size()];
           boolean[] global_articulation_point=new boolean[nodes.size()];
-          boolean[] local_articulation_point_complet=new boolean[nodes.size()];
-          boolean[] global_articulation_point_complet=new boolean[nodes.size()];
+          boolean[] local_articulation_point_complete=new boolean[nodes.size()];
+          boolean[] global_articulation_point_complete=new boolean[nodes.size()];
           //ArrayList<Integer>[] global_articulation_point=new ArrayList[4];
           Float[][] Triplets=new Float[4][nodes.size()];
           Float[] betweenness=new Float[nodes.size()];
@@ -613,24 +625,24 @@ String[][] charmatrix() {
           int[][] degrees=new int[this.nodes.size()][6];
           CC_info_type1=new Integer[this.nodes.size()];
           
-          Integer[] CC_info_complet=new Integer[this.nodes.size()];
+          Integer[] CC_info_complete=new Integer[this.nodes.size()];
           ArrayList<String>[] Progressive_transition=new  ArrayList[this.nodes.size()];
           Integer[] max_sp_type3=new Integer[this.nodes.size()];
-          Integer[] max_sp_complet=new Integer[this.nodes.size()];
+          Integer[] max_sp_complete=new Integer[this.nodes.size()];
           //CC_info=new Integer[this.nodes.size()];
-          //int CC_node_complet=0;
+          //int CC_node_complete=0;
           float total_triplet_type3=0;
-           float total_triplet_complet=0;
+           float total_triplet_complete=0;
            float total_triplet_type2=0;
            int total_CC_type1=0;
-           int total_CC_complet=0;
+           int total_CC_complete=0;
            
           for (int i=0; i<this.nodes.size();i++) {
               for (int j=0; j<6;j++) degrees[i][j]=0;
               CC_info_type1[i]=0;
-              CC_info_complet[i]=0;
+              CC_info_complete[i]=0;
               max_sp_type3[i]=0;
-              max_sp_complet[i]=0;
+              max_sp_complete[i]=0;
               in_degree2_norm[i]=0.0f;
               in_degree2[i]=0.0f;
               path_len4_type3[i]=0.0f;
@@ -711,16 +723,16 @@ String[][] charmatrix() {
               if (type==0) {
                    for (int i=0; i<g.total_nodes;i++) {                          
                      Triplets[0][g.id_to_old_id.get(i)]=g.find_triplet(i, false);                     
-                    total_triplet_complet+= Triplets[0][g.id_to_old_id.get(i)];
+                    total_triplet_complete+= Triplets[0][g.id_to_old_id.get(i)];
                     if (Triplets[0][g.id_to_old_id.get(i)]==0)Triplets[0][g.id_to_old_id.get(i)]=null; //--for display purpose
-                     local_articulation_point_complet[g.id_to_old_id.get(i)]=g.is_local_articulation_point(i);
-                     global_articulation_point_complet[g.id_to_old_id.get(i)]=g.is_global_articulation_point(i);
+                     local_articulation_point_complete[g.id_to_old_id.get(i)]=g.is_local_articulation_point(i);
+                     global_articulation_point_complete[g.id_to_old_id.get(i)]=g.is_global_articulation_point(i);
                    }
                    ArrayList<ArrayList<Integer>>tmp=g.getCC();
-                    total_CC_complet=tmp.size();
+                    total_CC_complete=tmp.size();
                     for (int i=0; i<tmp.size();i++) {
                       ArrayList<Integer>cc=tmp.get(i);
-                      for (int w:cc) CC_info_complet[g.id_to_old_id.get(w)]=i+1;
+                      for (int w:cc) CC_info_complete[g.id_to_old_id.get(w)]=i+1;
                   }
                    
               }
@@ -790,7 +802,7 @@ String[][] charmatrix() {
           for (int i=0; i<g3.total_nodes;i++) {
               int original_id=g3.id_to_old_id.get(i);
               max_sp_type3[original_id]=-1; 
-              max_sp_complet[original_id]=-1;
+              max_sp_complete[original_id]=-1;
               int original_id_gc=gc.old_id_to_id.get(original_id);
               for (int j=0; j<g3.total_nodes;j++) {
               if (i!=j) {
@@ -807,7 +819,7 @@ String[][] charmatrix() {
                         }
                     }
                    if (len_g3>max_sp_type3[original_id]&&len_g3<graph.infinity) max_sp_type3[original_id]=len_g3;
-                   if (len_gc>max_sp_complet[original_id]&&len_gc<graph.infinity) max_sp_complet[original_id]=len_gc;
+                   if (len_gc>max_sp_complete[original_id]&&len_gc<graph.infinity) max_sp_complete[original_id]=len_gc;
               }
           }
          }
@@ -848,13 +860,13 @@ String[][] charmatrix() {
               System.out.println("Saving summary information to "+filename+"_summary.txt");
               PrintWriter pw=new PrintWriter(new FileWriter(new File(filename+"_summary.txt")));
               // Output informations
-              pw.println("nodeid\tContains "+taxa+"\ttype_1\ttype_2\ttype_3\ttype_complet\tchar.\tstate\tchar.|states\tCC_type1\tCC_complet\tlocal_ap_type3\tglobal_ap_type3\tlocal_ap_complet\tglobal_ap_complet\tin_degree_type2\tNorm._indegree_type2\tBetweenness_type3\tCloseness_type3\tTriplet_type3\t%_Triplet_type3\tTriplet_complet\tt%_Triplet_complet\tMax_shortest_path_type3\tMax_shortest_path_complet\tConvergence\tProgressive_Transition_total\tProgressive_Transition_end_node\tContains\tPercent_contained\t"+taxa+"\tTaxa");
+              pw.println("nodeid\tContains "+taxa+"\ttype_1\ttype_2\ttype_3\ttype_complete\tchar.\tstate\tchar.|states\tCC_type1\tCC_complete\tlocal_ap_type3\tglobal_ap_type3\tlocal_ap_complete\tglobal_ap_complete\tin_degree_type2\tNorm._indegree_type2\tBetweenness_type3\tCloseness_type3\tTriplet_type3\t%_Triplet_type3\tTriplet_complete\tt%_Triplet_complete\tMax_shortest_path_type3\tMax_shortest_path_complete\tConvergence\tProgressive_Transition_total\tProgressive_Transition_end_node\tContains\tPercent_contained\t"+taxa+"\tTaxa");
                //--Some counter
               int total_taxa=0;
               int total_ap_local_type3=0;
-              int total_ap_local_complet=0;
+              int total_ap_local_complete=0;
               int total_ap_global_type3=0;
-              int total_ap_global_complet=0;
+              int total_ap_global_complete=0;
               int total_progressive=0;
               for (node n:this.nodes) {
                  //--Get the CC for this node
@@ -869,29 +881,29 @@ String[][] charmatrix() {
                   if (contain_taxa)total_taxa++;
                  if (local_articulation_point[n.id]) total_ap_local_type3++;
                  if (global_articulation_point[n.id]) total_ap_global_type3++;
-                 if (local_articulation_point_complet[n.id]) total_ap_local_complet++;
-                 if (global_articulation_point_complet[n.id]) total_ap_global_complet++;
+                 if (local_articulation_point_complete[n.id]) total_ap_local_complete++;
+                 if (global_articulation_point_complete[n.id]) total_ap_global_complete++;
                  
                  
                  String max_sp3="Inf.";
                  if (max_sp_type3[n.id]!=null&&max_sp_type3[n.id]<graph.infinity) max_sp3=""+max_sp_type3[n.id];
                  if (max_sp_type3[n.id]==null||max_sp_type3[n.id]<1) max_sp3="";
                  String max_spc="Inf.";
-                 if (max_sp_complet[n.id]!=null&&max_sp_complet[n.id]<graph.infinity) max_spc=""+max_sp_complet[n.id];
-                 if (max_sp_complet[n.id]==null||max_sp_complet[n.id]<1) max_spc="";
+                 if (max_sp_complete[n.id]!=null&&max_sp_complete[n.id]<graph.infinity) max_spc=""+max_sp_complete[n.id];
+                 if (max_sp_complete[n.id]==null||max_sp_complete[n.id]<1) max_spc="";
                  
                   total_progressive+=Progressive_transition[n.id].size();
                   pw.println(n.id+"\t"+(contain_taxa?"x":" ")+"\t"+(node_id_type.get(1).containsKey(n.id)?"x":" ")+"\t"+(node_id_type.get(2).containsKey(n.id)?"x":" ")+
                          "\t"+(node_id_type.get(3).containsKey(n.id)?"x":" ")+"\t"+(node_id_type.get(0).containsKey(n.id)?"x":" ")+"\t"+n.index+"\t"+n.state_matrix+"\t"+n.complete_name+"\t"+
                           (CC_info_type1[n.id]==null?" ":CC_info_type1[n.id])+"\t"+
-                          (CC_info_complet[n.id]==null?" ":CC_info_complet[n.id])+"\t"+
+                          (CC_info_complete[n.id]==null?" ":CC_info_complete[n.id])+"\t"+
                           (local_articulation_point[n.id]?"x":" ")+"\t"+(global_articulation_point[n.id]?"x":" ")+"\t"+
-                          (local_articulation_point_complet[n.id]?"x":" ")+"\t"+(global_articulation_point_complet[n.id]?"x":" ")+"\t"+
+                          (local_articulation_point_complete[n.id]?"x":" ")+"\t"+(global_articulation_point_complete[n.id]?"x":" ")+"\t"+
                          (in_degree2[n.id]>0?in_degree2[n.id]:" ")+"\t"+(in_degree2[n.id]>0?in_degree2_norm[n.id]:" ")+"\t"+
                           (betweenness[n.id]==null?" ":betweenness[n.id])+"\t"+
                           (closeness[n.id]==null?" ":closeness[n.id])+"\t"+
                          (Triplets[3][n.id]==null?" ":Triplets[3][n.id])+"\t"+(Triplets[3][n.id]==null?" ":Triplets[3][n.id]*100.0/total_triplet_type3)+"\t"+                         
-                         (Triplets[0][n.id]==null?" ":Triplets[0][n.id])+"\t"+(Triplets[0][n.id]==null?" ":Triplets[0][n.id]*100.0/total_triplet_complet)+"\t"+
+                         (Triplets[0][n.id]==null?" ":Triplets[0][n.id])+"\t"+(Triplets[0][n.id]==null?" ":Triplets[0][n.id]*100.0/total_triplet_complete)+"\t"+
                           max_sp3+"\t"+max_spc+"\t"+
                           (path_loop_len4_type3[n.id]==null||path_len4_type3[n.id]==null?" ":path_loop_len4_type3[n.id]/path_len4_type3[n.id])+"\t"+                         
                           Progressive_transition[n.id].size()+"\t"+Progressive_transition[n.id]+"\t"+
@@ -900,7 +912,7 @@ String[][] charmatrix() {
                  );
               }
               //--Summary
-              pw.println("Total\t"+total_taxa+"\t"+this.node_id_type.get(1).size()+"\t"+this.node_id_type.get(2).size()+"\t"+this.node_id_type.get(3).size()+"\t"+this.node_id_type.get(0).size()+"\tNA\tNA\tNA\t"+total_CC_type1+"\t"+total_CC_complet+"\t"+total_ap_local_type3+"\t"+total_ap_global_type3+"\t"+total_ap_local_complet+"\t"+total_ap_global_complet+"\tNA\tNA\tNA\tNA\tNA\tNA\tNA\tNA\tNA\t"+total_progressive+"\t\t"+total_taxa);
+              pw.println("Total\t"+total_taxa+"\t"+this.node_id_type.get(1).size()+"\t"+this.node_id_type.get(2).size()+"\t"+this.node_id_type.get(3).size()+"\t"+this.node_id_type.get(0).size()+"\tNA\tNA\tNA\t"+total_CC_type1+"\t"+total_CC_complete+"\t"+total_ap_local_type3+"\t"+total_ap_global_type3+"\t"+total_ap_local_complete+"\t"+total_ap_global_complete+"\tNA\tNA\tNA\tNA\tNA\tNA\tNA\tNA\tNA\t"+total_progressive+"\t\t"+total_taxa);
               pw.println("Note: 'x' indicates presence, CC stands for Connected Components, local_ap stands for Local Articulation Point, global_ap stands for Global Articulation Point, Triplets stands for linear series of 3 nodes where terminal nodes are not connected, Convergence stands for the ratio of loops found in paths of lenght <= 4 from the starting nodes, Progressive convergence stand for short path of length>2 in type 3 network that is not smaller in complet network.");
               pw.flush();
               pw.close();
@@ -1012,16 +1024,16 @@ String[][] charmatrix() {
       // Bipartition
        
             String f=filename+".bipartite";
-           String f2=filename+"_complet_"+solution+".txt";
+           String f2=filename+"_complete_"+solution+".txt";
                    
             
-            String f_complet=f+"_complet_"+solution+".txt";
+            String f_complete=f+"_complete_"+solution+".txt";
             String f_1= f+"_"+solution+"_1.txt";
             String f_2= f+"_"+solution+"_2.txt";
             String f_3= f+"_"+solution+"_3.txt";
             String f_id= f+"_"+solution+"_id.txt";          
             if (bipartite) {
-                output_biparition_complet.open(f_complet);
+                output_biparition_complete.open(f_complete);
             
                 output_biparition_1.open(f_1);
                 output_biparition_2.open(f_2);
@@ -1078,14 +1090,14 @@ String[][] charmatrix() {
                 long elapsed=System.currentTimeMillis()-timerunning;
                System.out.println(total+" / "+total+" ( "+util.msToString(elapsed)+")");    
              if (this.bipartite) {
-               output_biparition_complet.close();
+               output_biparition_complete.close();
                 output_biparition_1.close();
                  output_biparition_2.close();
                 output_biparition_3.close();     
              }
                 if (!nooutput) export_edgelist(filename+"_"+solution);   
                 if (save_graphml) {           
-                     export_graphml(filename+"_"+solution+"_complet",0);
+                     export_graphml(filename+"_"+solution+"_complete",0);
                      export_graphml(filename+"_"+solution+"_1",1);
                      export_graphml(filename+"_"+solution+"_2",2);
                      export_graphml(filename+"_"+solution+"_3",3);
@@ -1093,17 +1105,17 @@ String[][] charmatrix() {
                 display_result(filename+"_"+solution);
                 if (this.bipartite) { 
                     System.out.println("=============================== BIPARTITION ===================================");                
-                    System.out.println("Saving bipartition files to : "+f_complet);
+                    System.out.println("Saving bipartition files to : "+f_complete);
                     System.out.println("Saving bipartition node identification to : "+f_id);
-                    output_biparition_complet.open(f_id);
+                    output_biparition_complete.open(f_id);
                     for (String m:bipartite_node_id.keySet()) {
                         String taxa=get_taxa(m);
-                        output_biparition_complet.println(bipartite_node_id.get(m)+"\t\""+taxa+"\"");
+                        output_biparition_complete.println(bipartite_node_id.get(m)+"\t\""+taxa+"\"");
                     }
                     for (node n:nodes) {
-                        output_biparition_complet.println(n.id+"\t\""+n.complete_name+"\"");
+                        output_biparition_complete.println(n.id+"\t\""+n.complete_name+"\"");
                     }
-                    output_biparition_complet.close();
+                    output_biparition_complete.close();
                     System.out.println("===============================================================================");                
                  
                 } //End saving bipartite graph
@@ -1173,7 +1185,7 @@ String[][] charmatrix() {
        //  noeud1 separateur noeud2 separateur partition_de_taxa_commune separateur directed(or undirected) separateur type_d_arete(1,23)
        try {            
             //-Type 0
-            PrintWriter pw=new PrintWriter(new FileWriter(new File(filename+"_complet.txt")));                                       
+            PrintWriter pw=new PrintWriter(new FileWriter(new File(filename+"_complete.txt")));                                       
             pw.println("#src_id\tdest_id\tedge_type\tnumber_common_taxa");
             for (int i=0; i<this.total_edge;i++) {               
                     if (type_edge[i]!=-1) pw.println(""+src_edge[i]+"\t"+dest_edge[i]+"\t"+type_edge[i]+"\t"+taxa_edge[i]);                     
@@ -1437,8 +1449,8 @@ String[][] charmatrix() {
 //                            } 
 //                           
 //                                if (bipartite_type==0||type==bipartite_type) {
-//                                    output_biparition_complet.println(bipartite_id+"\t"+source_index);
-//                                    output_biparition_complet.println(bipartite_id+"\t"+dest_index);
+//                                    output_biparition_complete.println(bipartite_id+"\t"+source_index);
+//                                    output_biparition_complete.println(bipartite_id+"\t"+dest_index);
 //                                } 
 //                            
 //                        } //--End not 4         
@@ -1488,8 +1500,8 @@ String[][] charmatrix() {
                             } 
                            if (bipartite) {
                             // Output bipartition
-                                    output_biparition_complet.println(bipartite_id+"\t"+source_index+"\t"+type);
-                                    output_biparition_complet.println(bipartite_id+"\t"+dest_index+"\t"+type);
+                                    output_biparition_complete.println(bipartite_id+"\t"+source_index+"\t"+type);
+                                    output_biparition_complete.println(bipartite_id+"\t"+dest_index+"\t"+type);
                                     
                                     if (type==1) {
                                           output_biparition_1.println(bipartite_id+"\t"+source_index);
