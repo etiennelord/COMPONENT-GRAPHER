@@ -93,7 +93,7 @@ public class main {
             if (s.indexOf("-maxiter=")>-1) maxiter=Integer.valueOf(st.substring(9));
             if (s.indexOf("-mintaxa=")>-1) minrand=Integer.valueOf(st.substring(9));
             if (s.indexOf("-random=")>-1) random_n=Integer.valueOf(st.substring(8));
-            if (s.indexOf("-states=")>-1) user_state_string=st.substring(8);
+            if (s.indexOf("-variation=")>-1) user_state_string=st.substring(11);
             if (s.indexOf("-undefined")>-1) undefined=true;
             if (s.indexOf("-multiple")>-1) multiple=true;            
             if (s.indexOf("-show_matrix")>-1) show_matrix=true;            
@@ -113,6 +113,10 @@ public class main {
         }         
          if (random_n>0&&maxiter==1) {             
              maxiter=random_n;
+         }
+         if (!user_state_string.isEmpty()) {
+             maxiter=1;
+             random_n=0;             
          }
          d.filename=filename;
          d.random=random_n;
@@ -152,13 +156,14 @@ public class main {
           
           System.out.println("Options :");
           System.out.println("\t-taxa=list   : Specify some taxas tagged in the summary file\n\t\t\t(list separated by comma e.g. A,B,C).");
-          System.out.println("\t-maxiter=9   : Maximum number of iterations to search in case of \n\t\t\tundefined states in the input matrix (e.g. {1,2,3})\n\t\t(default=1).");
-          System.out.println("\t-random=9    : Specify the number of random iterations if we have multiple states");
+          System.out.println("\t-maxiter=9   : Maximum number of variations to search in case of \n\t\t\tundefined states in the input matrix (e.g. {1,2,3})\n\t\t(default=1).");
+          System.out.println("\t-random=9    : Specify the number of random variations if we have multiple states");
           System.out.println("\t-undefined   : Remove column containing undefined states (e.g. ?,-)");
           System.out.println("\t-multiple    : Remove column containing multiple states (e.g. {1,2,3}).");          
           System.out.println("\t-bipartite   : Output bipartite file.");
           System.out.println("\t-graphml     : Output graphml file.");
           System.out.println("\t-output=file : Specify output file name.");
+          System.out.println("\t-variation=X : Specify the variation string to use.");
           System.out.println("\t-summary     : Compute summary statistic such as degrees, betweenness.");
          
           System.out.println("================================= OUTPUTS =====================================");
@@ -166,8 +171,8 @@ public class main {
           System.out.println("\tmatrixfile_XXX_complete.txt: edge list of the complete network (types 1,2,3).");
           System.out.println("\tmatrixfile_XXX_1.txt       : edge list of the type 1 connections.");
           System.out.println("\tmatrixfile_XXX_2.txt       : edge list of the type 2 connections.");
-          System.out.println("\tmatrixfile_XXX_3.txt       : edge list of the type 3 connection.");
-          System.out.println("\tmatrixfile_XXX_4.txt       : edge list of the type 4 connection.");
+          System.out.println("\tmatrixfile_XXX_3.txt       : edge list of the type 3 connections.");
+          System.out.println("\tmatrixfile_XXX_4.txt       : edge list of the type 4 connections.");
           System.out.println("\tmatrixfile_XXX_id.txt      : identification for each node");
           System.out.println("\tmatrixfile_XXX_stat.txt    : statistics and parameters for this run.");
           System.out.println("\t*XXX will be replace by the iteration number if there is multiple states. ");
@@ -175,11 +180,11 @@ public class main {
           System.out.println("\tmatrixfile.bipartite_XXX_complete.txt : bipartite graph of the complete network.");
           System.out.println("\tmatrixfile.bipartite_XXX_1.txt       : bipartite graph of the type 1 connections.");
           System.out.println("\tmatrixfile.bipartite_XXX_2.txt       : bipartite graph of the type 2 connections.");
-          System.out.println("\tmatrixfile.bipartite_XXX_3.txt       : bipartite graph of the type 3 connection.");          
+          System.out.println("\tmatrixfile.bipartite_XXX_3.txt       : bipartite graph of the type 3 connections.");          
           System.out.println("\tmatrixfile.bipartite_XXX_id.txt      : identification for each node");
           System.out.println("\nIf the [-summary] option is use, the following file will also be produced:");
           System.out.println("\tmatrixfile_XXX_summary.txt           : summary statistics for this run.");
-          System.out.println("\nIf the [-graphml] option is use, the following file will also be produced:");
+          System.out.println("\nIf the [-graphml] option is used, the following file will also be produced:");
           System.out.println("\tmatrixfile_XXX_complete.graphml");
           System.out.println("\tmatrixfile_XXX_1.graphml");
           System.out.println("\tmatrixfile_XXX_2.graphml");

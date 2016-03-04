@@ -528,35 +528,37 @@ String[][] charmatrix() {
                multiple_column.add(i);
            }
        }
-        
-       System.out.println("Total iterations                     : "+this.maxiter);
-       if (this.random>0||((float)this.maxiter)<this.total_states) {
-           System.out.println("Iteration mode                       : random");       
-       } else {
-            System.out.println("Iteration mode                       : ordered");   
-       }
+         if (this.maxiter>total_states&&total_states<1000) this.maxiter=(int)total_states;
+      
 //--Output to screen some information about the char matrix       
        System.out.println("N taxa                               : "+this.ntax+" (rows)");
        System.out.println("N characters                         : "+this.nchar+" (columns)");
         //--Create the various state matrix         
        System.out.println("Total number of multistate characters: "+ this.states.size());
-       System.out.println("Total number of possible variations  : "+((int)this.total_states));               
+       System.out.println("Total number of possible variations  : "+((int)this.total_states));    
+        System.out.println("Total variations tested              : "+this.maxiter);
+       if (this.random>0||((float)this.maxiter)<this.total_states) {
+           System.out.println("Iteration mode                       : random");       
+       } else {
+            System.out.println("Iteration mode                       : ordered");   
+       }
        System.out.println("Total undefined column(s)            : "+total_undefined_column);
        System.out.println("Total multiple column(s)             : "+total_multiple_column);
        System.out.println("Total undefined char                 : "+total_undefined);
        System.out.println("Total multiple char                  : "+total_multiple);
        
-         st_option.append("Total iterations                     : "+this.maxiter+"\n");
+      
+         st_option.append("N taxa                               : "+this.ntax+" (rows)\n");
+        st_option.append("N characters                         : "+this.nchar+" (columns)\n");
+        //--Create the various state matrix         
+        st_option.append("Total number of multistate characters: "+ this.states.size()+"\n");
+        st_option.append("Total number of possible variations  : "+((int)this.total_states+"\n"));   
+           st_option.append("Total variations tested              : "+this.maxiter+"\n");
        if (this.random>0||((float)this.maxiter)<this.total_states) {
            st_option.append("Iteration mode                       : random\n");       
        } else {
              st_option.append("Iteration mode                       : ordered\n");   
        }
-         st_option.append("N taxa                               : "+this.ntax+" (rows)\n");
-        st_option.append("N characters                         : "+this.nchar+" (columns)\n");
-        //--Create the various state matrix         
-        st_option.append("Total number of multistate characters: "+ this.states.size()+"\n");
-        st_option.append("Total number of possible variations  : "+((int)this.total_states+"\n"));               
         st_option.append("Total undefined column(s)            : "+total_undefined_column+"\n");
         st_option.append("Total multiple column(s)             : "+total_multiple_column+"\n");
         st_option.append("Total undefined char                 : "+total_undefined+"\n");
@@ -594,6 +596,7 @@ String[][] charmatrix() {
           System.out.println("Max. iteration (if multiple states): "+this.maxiter);
           st_option.append("Max. iteration (if multiple states): "+this.maxiter);
       }      
+     
       compute_partition();            
   }
   
@@ -624,7 +627,7 @@ String[][] charmatrix() {
       
       if (total_states>1) {
           String sti=state_strings.get(state_strings.size()-1);
-          st_results.append("States evaluated : "+sti+"\n");
+          st_results.append("States variations : "+sti+"\n");
           st_results.append("Taxa->Character(column)|Value\n");
           st_results.append("--------------------------------------------------------------------------------\n");
           
@@ -646,8 +649,8 @@ String[][] charmatrix() {
       try {
           PrintWriter pw=new PrintWriter(new FileWriter(new File(filename+"_stat.txt")));
           
-          pw.println(st_option);
-          pw.println(st_results);
+          pw.print(st_option);
+          pw.print(st_results);
           pw.close();
       } catch(Exception e) {}
       
@@ -904,7 +907,7 @@ String[][] charmatrix() {
               System.out.println("Saving summary information to "+filename+"_summary.txt");
               PrintWriter pw=new PrintWriter(new FileWriter(new File(filename+"_summary.txt")));
               // Output informations
-              pw.println("nodeid\tContains "+taxa+"\ttype_1\ttype_2\ttype_3\ttype_complete\tchar.\tstate\tchar.|states\tCC_type1\tCC_complete\tlocal_ap_type3\tglobal_ap_type3\tlocal_ap_complete\tglobal_ap_complete\tin_degree_type2\tNorm._indegree_type2\tBetweenness_type3\tCloseness_type3\tTriplet_type3\t%_Triplet_type3\tTriplet_complete\tt%_Triplet_complete\tMax_shortest_path_type3\tMax_shortest_path_complete\tConvergence\tProgressive_Transition_total\tProgressive_Transition_end_node\tContains\tPercent_contained\t"+taxa+"\tTaxa");
+              pw.println("nodeid\tcontains_taxa"+taxa+"\tfound_in_type_1\tfound_in_type_2\tfound_in_type_3\tfound_in_complete\tcolumn\tencoded_state\tchar_states\tCC_type1\tCC_complete\tlocal_ap_type3\tglobal_ap_type3\tlocal_ap_complete\tglobal_ap_complete\tin_degree_type2\tnorm_indegree_type2\tbetweenness_type3\tcloseness_type3\ttriplet_type3\tper_triplet_type3\ttriplet_complete\tper_triplet_complete\tmax_shortest_path_type3\tmax_shortest_path_complete\tconvergence\tprogressive_transition\tprogressive_transition_end_node\tcontains\tpercent_contained\tTaxa");
                //--Some counter
               int total_taxa=0;
               int total_ap_local_type3=0;
@@ -959,7 +962,7 @@ String[][] charmatrix() {
               }
               //--Summary
               pw.println("Total\t"+total_taxa+"\t"+this.node_id_type.get(1).size()+"\t"+this.node_id_type.get(2).size()+"\t"+this.node_id_type.get(3).size()+"\t"+this.node_id_type.get(0).size()+"\tNA\tNA\tNA\t"+total_CC_type1+"\t"+total_CC_complete+"\t"+total_ap_local_type3+"\t"+total_ap_global_type3+"\t"+total_ap_local_complete+"\t"+total_ap_global_complete+"\tNA\tNA\tNA\tNA\tNA\tNA\tNA\tNA\tNA\t"+total_progressive+"\t\t"+total_taxa);
-              pw.println("Note: 'x' indicates presence, CC stands for Connected Components, local_ap stands for Local Articulation Point, global_ap stands for Global Articulation Point, Triplets stands for linear series of 3 nodes where terminal nodes are not connected, Convergence stands for the ratio of loops found in paths of lenght <= 4 from the starting nodes, Progressive convergence stand for short path of length>2 in type 3 network that is not smaller in complet network.");
+              pw.println("Note: 'x' indicates presence, CC stands for Connected Components, local_ap stands for Local Articulation points, global_ap stands for Global Articulation points, Triplets stands for linear series of 3 nodes where the terminal nodes are not connected, Convergence stands for the ratio of loops found in paths of length 3 or 4 from the starting nodes, Progressive convergence stands for short paths of length>2 in type 3 network that are not smaller in the complete network.");
               pw.flush();
               pw.close();
               System.out.println("===============================================================================");
@@ -1029,6 +1032,9 @@ String[][] charmatrix() {
       System.out.println("Total treated column                 : "+total_column);
       System.out.println("Total possible nodes                 : "+nodes.size());
       System.out.println("===============================================================================");        
+     st_option.append("Total treated column                 : "+total_column+"\n");
+      st_option.append("Total possible nodes                 : "+nodes.size()+"\n");
+     
 //--Allocate new edges
         int max_iter=this.maxiter;
       if (this.total_states==1) max_iter=1;
@@ -1094,12 +1100,12 @@ String[][] charmatrix() {
                 bipartite_index=nodes.size(); //starting bipartition id
             }
           System.out.println("===============================================================================");
-          System.out.println("Current iteration : "+(state_id+1)+"/"+max_iter+ "\nStates evaluated : "+(solution.equals("")?"none":solution)+"\n(saving to: "+f2+")");
+          System.out.println("Current iteration : "+(state_id+1)+"/"+max_iter+ "\nStates variations : "+(solution.equals("")?"none":solution)+"\n(saving to: "+f2+")");
           System.out.println("===============================================================================");
          this.st_results=new StringBuilder();
           st_results.append("===============================================================================\n");
-          st_results.append("Current iteration : "+(state_id+1)+"/"+max_iter+ "\nStates evaluated  : "+(solution.equals("")?"none":solution)+"\n(saving to: "+f2+")\n");
-          st_results.append("===============================================================================\n");
+          st_results.append("Current iteration : "+(state_id+1)+"/"+max_iter+ "\nStates variations : "+(solution.equals("")?"none":solution)+"\n(saving to: "+f2+")\n");
+          
         //--Precompute the partition
          //Reset OR not? TO DO. IF maxiter is not set, we should pile up results?
             
@@ -1371,8 +1377,19 @@ String[][] charmatrix() {
           if (random>0&&random>total_states) {
               random=0;              
           } 
-         boolean ok=false;                  
-         if (!rand&&total_states<1000&&random==0) {
+         boolean ok=false;      
+        if (!user_state_string.isEmpty()&&user_state_string.length()>=states.size()) {
+                 current_state=user_state_string;             
+             try {
+              for(int i=0; i<states.size();i++) {
+                  state s=states.get(i);
+                  this.current_state_matrix[s.pos_i][s.pos_j]=""+current_state.charAt(i);
+              }
+             } catch (Exception e) {
+                 System.out.println("Illegal user supplied variation string : "+current_state);                 
+                 System.exit(-1);
+             }
+        } else if (!rand&&total_states<1000&&random==0) {
              //--Generate the combinations if not generated
             if (state_strings.isEmpty()) {
                 ArrayList<String> input=new ArrayList<String>();
@@ -1380,12 +1397,6 @@ String[][] charmatrix() {
                 state_strings=util.combinations(input);
             }
              current_state=state_strings.get(state_id);
-             for(int i=0; i<states.size();i++) {
-                  state s=states.get(i);
-                  this.current_state_matrix[s.pos_i][s.pos_j]=""+current_state.charAt(i);
-              }
-         } else if (!user_state_string.isEmpty()&&user_state_string.length()>=states.size()) {
-             current_state=user_state_string;             
              for(int i=0; i<states.size();i++) {
                   state s=states.get(i);
                   this.current_state_matrix[s.pos_i][s.pos_j]=""+current_state.charAt(i);
