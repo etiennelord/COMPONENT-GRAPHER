@@ -628,7 +628,7 @@ String[][] charmatrix() {
       if (total_states>1) {
           String sti=state_strings.get(state_strings.size()-1);
           st_results.append("States variations : "+sti+"\n");
-          st_results.append("Taxa->Character(column)|Value\n");
+          st_results.append("Taxon->Character(column)|Value\n");
           st_results.append("--------------------------------------------------------------------------------\n");
           
           for (int i=0; i<this.states.size();i++) {
@@ -907,7 +907,7 @@ String[][] charmatrix() {
               System.out.println("Saving summary information to "+filename+"_summary.txt");
               PrintWriter pw=new PrintWriter(new FileWriter(new File(filename+"_summary.txt")));
               // Output informations
-              pw.println("nodeid\tcontains_taxa"+taxa+"\tfound_in_type_1\tfound_in_type_2\tfound_in_type_3\tfound_in_complete\tcolumn\tencoded_state\tchar_states\tCC_type1\tCC_complete\tlocal_ap_type3\tglobal_ap_type3\tlocal_ap_complete\tglobal_ap_complete\tin_degree_type2\tnorm_indegree_type2\tbetweenness_type3\tcloseness_type3\ttriplet_type3\tper_triplet_type3\ttriplet_complete\tper_triplet_complete\tmax_shortest_path_type3\tmax_shortest_path_complete\tconvergence\tprogressive_transition\tprogressive_transition_end_node\tcontains\tpercent_contained\tTaxa");
+              pw.println("nodeid\tcontains_taxa\tfound_in_type_1\tfound_in_type_2\tfound_in_type_3\tfound_in_complete\tcolumn\tencoded_state\tchar_states\tCC_type1\tCC_complete\tlocal_ap_type3\tglobal_ap_type3\tlocal_ap_complete\tglobal_ap_complete\tin_degree_type2\tnorm_indegree_type2\tbetweenness_type3\tcloseness_type3\ttriplet_type3\tper_triplet_type3\ttriplet_complete\tper_triplet_complete\tmax_shortest_path_type3\tmax_shortest_path_complete\tconvergence\tprogressive_transition\tprogressive_transition_end_node\tcontains\tpercent_contained\tTaxa");
                //--Some counter
               int total_taxa=0;
               int total_ap_local_type3=0;
@@ -963,8 +963,9 @@ String[][] charmatrix() {
               //--Summary
               pw.println("Total\t"+total_taxa+"\t"+this.node_id_type.get(1).size()+"\t"+this.node_id_type.get(2).size()+"\t"+this.node_id_type.get(3).size()+"\t"+this.node_id_type.get(0).size()+"\tNA\tNA\tNA\t"+total_CC_type1+"\t"+total_CC_complete+"\t"+total_ap_local_type3+"\t"+total_ap_global_type3+"\t"+total_ap_local_complete+"\t"+total_ap_global_complete+"\tNA\tNA\tNA\tNA\tNA\tNA\tNA\tNA\tNA\t"+total_progressive+"\t\t"+total_taxa);
               pw.println("Note: 'x' indicates presence, CC stands for Connected Components, local_ap stands for Local Articulation points, global_ap stands for Global Articulation points, Triplets stands for linear series of 3 nodes where the terminal nodes are not connected, Convergence stands for the ratio of loops found in paths of length 3 or 4 from the starting nodes, Progressive convergence stands for short paths of length>2 in type 3 network that are not smaller in the complete network.");
+              if (!taxa.isEmpty()) pw.println("(Searched taxa: "+taxa+")");
               pw.flush();
-              pw.close();
+              pw.close();                                 
               System.out.println("===============================================================================");
           } catch(Exception e) {e.printStackTrace();}
       }
@@ -1693,10 +1694,10 @@ String[][] charmatrix() {
 
     void load_charstate(String filename) {
         if (filename.isEmpty()) return;
-        System.out.println("Loading external char.-states:"+filename);
+        System.out.println("Loading external char.-states        : "+filename);
         ArrayList<String> tmp=util.loadStrings(filename);
         if (tmp.size()==0) {
-            System.out.println("...failed");
+            System.out.println("...failed to load :" +filename);
             return;
         }
        

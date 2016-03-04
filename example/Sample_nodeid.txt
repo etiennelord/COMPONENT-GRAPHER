@@ -1,0 +1,12 @@
+1	0	Mouth opening orientation 	terminal
+1	1	Mouth opening orientation 	ventral
+2	0	Pre-oral chamber 	absent
+2	1	Pre-oral chamber 	present
+3	0	Radially arranged circumoral structures 	absent
+3	1	Radially arranged circumoral structures 	present
+4	0	Differentiated circumoral structures 	 undifferentiated plates 
+4	1	Differentiated circumoral structures 	 three or four enlarged plates 
+5	0	Pharynx differentiated from midgut 	 not differentiated 
+5	1	Pharynx differentiated from midgut 	 differentiated 
+6	0	Pharynx reversible 	 permanently inverted
+6	1	Pharynx reversible 	 completely reversible

@@ -156,19 +156,20 @@ public class main {
           
           System.out.println("Options :");
           System.out.println("\t-taxa=list   : Specify some taxas tagged in the summary file\n\t\t\t(list separated by comma e.g. A,B,C).");
-          System.out.println("\t-maxiter=9   : Maximum number of variations to search in case of \n\t\t\tundefined states in the input matrix (e.g. {1,2,3})\n\t\t(default=1).");
-          System.out.println("\t-random=9    : Specify the number of random variations if we have multiple states");
+          System.out.println("\t-maxiter=9   : Maximum number of variations to search in case of \n\t\t\tundefined states in the input matrix (e.g. {1,2,3})\n\t\t\t*Note: the first 1000 iterations are ordered and not \n\t\t\trandom. (default=1). ");
+          System.out.println("\t-random=9    : Force a number of random variations.");
           System.out.println("\t-undefined   : Remove column containing undefined states (e.g. ?,-)");
           System.out.println("\t-multiple    : Remove column containing multiple states (e.g. {1,2,3}).");          
           System.out.println("\t-bipartite   : Output bipartite file.");
-          System.out.println("\t-graphml     : Output graphml file.");
-          System.out.println("\t-output=file : Specify output file name.");
+          System.out.println("\t-graphml     : Output graphml file (Gephi compatible).");
+          System.out.println("\t-nodeid=file : Provide a node identification file.");
+          System.out.println("\t-output=file : Specify output filename.");
           System.out.println("\t-variation=X : Specify the variation string to use.");
           System.out.println("\t-summary     : Compute summary statistic such as degrees, betweenness.");
          
           System.out.println("================================= OUTPUTS =====================================");
           System.out.println("\nFor each iteration (see maxiter parameter) :\n");
-          System.out.println("\tmatrixfile_XXX_complete.txt: edge list of the complete network (types 1,2,3).");
+          System.out.println("\tmatrixfile_XXX_complete.txt: edge list of the complete network.");
           System.out.println("\tmatrixfile_XXX_1.txt       : edge list of the type 1 connections.");
           System.out.println("\tmatrixfile_XXX_2.txt       : edge list of the type 2 connections.");
           System.out.println("\tmatrixfile_XXX_3.txt       : edge list of the type 3 connections.");
@@ -177,10 +178,10 @@ public class main {
           System.out.println("\tmatrixfile_XXX_stat.txt    : statistics and parameters for this run.");
           System.out.println("\t*XXX will be replace by the iteration number if there is multiple states. ");
           System.out.println("\nIf the [-bipartite] option is use, the following files will also be produced:");
-          System.out.println("\tmatrixfile.bipartite_XXX_complete.txt : bipartite graph of the complete network.");
-          System.out.println("\tmatrixfile.bipartite_XXX_1.txt       : bipartite graph of the type 1 connections.");
-          System.out.println("\tmatrixfile.bipartite_XXX_2.txt       : bipartite graph of the type 2 connections.");
-          System.out.println("\tmatrixfile.bipartite_XXX_3.txt       : bipartite graph of the type 3 connections.");          
+          System.out.println("\tmatrixfile.bipartite_XXX_complete.txt: bipartite network of the\n\t\t\t\t\t\tcomplete network.");
+          System.out.println("\tmatrixfile.bipartite_XXX_1.txt       : bipartite network of the type 1.");
+          System.out.println("\tmatrixfile.bipartite_XXX_2.txt       : bipartite network of the type 2.");
+          System.out.println("\tmatrixfile.bipartite_XXX_3.txt       : bipartite network of the type 3.");          
           System.out.println("\tmatrixfile.bipartite_XXX_id.txt      : identification for each node");
           System.out.println("\nIf the [-summary] option is use, the following file will also be produced:");
           System.out.println("\tmatrixfile_XXX_summary.txt           : summary statistics for this run.");
