@@ -53,6 +53,7 @@ public class datasets {
    public double max_taxa_percent=1;
    public double min_taxa=1;
    
+   public int random=0; 
    public boolean save_graphml=false;
    public boolean nooutput=false;
    public boolean remove_undefined_column=false;
@@ -74,7 +75,9 @@ public class datasets {
    util output_biparition_2=new util();
    util output_biparition_3=new util();
    StringBuilder st_option=new StringBuilder(); //--Selected options
-   
+   StringBuilder st_results=new StringBuilder(); //--Selected options
+      
+
    /////////////////////////////////////////////////////////////////////////////
    /// VARIABLES - Datasets
    public ArrayList<String> charlabels=new ArrayList<String>();
@@ -106,24 +109,18 @@ public class datasets {
    public boolean save_inter_result=true;
    PrintWriter pw_output;
    
-   ArrayList<state> states=new ArrayList<state>(); //--
+   ArrayList<state> states=new ArrayList<state>(); //--Multiple-states positions (i,j)and information in the matrix
    public static ArrayList<String> state_strings=new ArrayList<String>(); //--StateString for this char matrix        
    public String current_state_matrix[][]; 
    /////////////////////////////////////////////////////////////////////////////
    /// Constant
-     public static String[] m_type={"","perfect concomittant","inclusion","partial concomittant","disjoint","inclusion"};
+     public static String[] m_type={"","perfect concomittant","inclusion","overlap","disjoint","inclusion"};
    
    /////////////////////////////////////////////////////////////////////////////
    /// Results for this datasets
  
    public static ArrayList<ArrayList<Integer>>precomp_partitions[]; //Precalculated partition   
-   //public static ConcurrentHashMap <ArrayList<Integer>,Integer> vertex_numbering=new ConcurrentHashMap <>();
-   //public static ConcurrentHashMap <Integer,ArrayList<Integer>> vertex_numbering_inv=new ConcurrentHashMap <>();
-   //public static HashMap<edge,Integer> edges=new HashMap<>();
-   ///-Edge and nodes
-   //ArrayList<edge> edges=new ArrayList<>();
-    // Edges are now replaced with an array of max size 
-   // total_node*(total_node-1)/2
+  
    int total_edge=0; //--To remove
    int total_edges=0;
    int[] src_edge;
@@ -131,6 +128,12 @@ public class datasets {
    int[] type_edge;
    int[] taxa_edge;
    int[] count_edge; // For multiple_edge, the stengh of the link 
+   
+   //--Special handle for type 4 since we don't want to mix them.
+   int[] type4_src_edge;
+   int[] type4_dest_edge;  
+   int type4_total_edge=0;
+   
    //int[] rand_edge; 
    
    ArrayList<node> nodes=new ArrayList<node>();
@@ -147,6 +150,7 @@ public class datasets {
    int total_type1=0;
    int total_type2=0;
    int total_type3=0;
+   int total_type4=0;
 
 /////////////////////////////////////////////////////////////////////////////
    /// FUNCTIONS    
@@ -524,7 +528,14 @@ String[][] charmatrix() {
                multiple_column.add(i);
            }
        }
-       //--Output to screen some information about the char matrix       
+        
+       System.out.println("Total iterations                     : "+this.maxiter);
+       if (this.random>0||((float)this.maxiter)<this.total_states) {
+           System.out.println("Iteration mode                       : random");       
+       } else {
+            System.out.println("Iteration mode                       : ordered");   
+       }
+//--Output to screen some information about the char matrix       
        System.out.println("N taxa                               : "+this.ntax+" (rows)");
        System.out.println("N characters                         : "+this.nchar+" (columns)");
         //--Create the various state matrix         
@@ -535,6 +546,12 @@ String[][] charmatrix() {
        System.out.println("Total undefined char                 : "+total_undefined);
        System.out.println("Total multiple char                  : "+total_multiple);
        
+         st_option.append("Total iterations                     : "+this.maxiter+"\n");
+       if (this.random>0||((float)this.maxiter)<this.total_states) {
+           st_option.append("Iteration mode                       : random\n");       
+       } else {
+             st_option.append("Iteration mode                       : ordered\n");   
+       }
          st_option.append("N taxa                               : "+this.ntax+" (rows)\n");
         st_option.append("N characters                         : "+this.nchar+" (columns)\n");
         //--Create the various state matrix         
@@ -555,7 +572,7 @@ String[][] charmatrix() {
   public void compute() {       
       get_info();
       //--Clear
-        for (int i=0; i<4;i++) {
+        for (int i=0; i<5;i++) {
            node_id_type.add(new HashMap<Integer,Integer>());
        }
       state_strings.clear();
@@ -581,54 +598,56 @@ String[][] charmatrix() {
   }
   
   public void display_result(String filename) {
-     StringBuilder st=new StringBuilder();
-     st.append("===============================================================================\n");
-      st.append("Results:\n");
-      st.append("===============================================================================\n");
-      st.append("Edges (total)                     : "+total_type0+"\n");
+    
+     st_results.append("===============================================================================\n");
+      st_results.append("Results:\n");
+      st_results.append("===============================================================================\n");
+      st_results.append("Edges (total)                     : "+total_type0+"\n");
       int total_1=0;
       int total_2=0;
       int total_3=0;
       int unassigned_node=0;
       for (node n:nodes) if (!node_id_type.get(0).containsKey(n.id)) unassigned_node++;
-      st.append("Edges type 1 (perfect)            : "+total_type1+"\n");
-      st.append("Edges type 2 (inclusion)          : "+total_type2+"\n");
-      st.append("Edges type 3 (partial concomitant): "+total_type3+"\n");
-      st.append("\n");
-      st.append("Total nodes evaluated             : "+nodes.size()+"\n");      
-      st.append("Total nodes                       : "+node_id_type.get(0).size()+"\n");      
-      st.append("Node (unassigned)                 : "+unassigned_node+"\n");  
-      st.append("Node type 1 (perfect)             : "+node_id_type.get(1).size()+"\n");
-      st.append("Node type 2 (inclusion)           : "+node_id_type.get(2).size()+"\n");
-      st.append("Node type 3 (partial concomitant) : "+node_id_type.get(3).size()+"\n");
-      st.append("===============================================================================\n");
+      st_results.append("Edges type 1 (perfect)            : "+total_type1+"\n");
+      st_results.append("Edges type 2 (inclusion)          : "+total_type2+"\n");
+      st_results.append("Edges type 3 (overlap)            : "+total_type3+"\n");
+      st_results.append("Edges type 4 (disjoint)           : "+total_type4+"\n");
+      st_results.append("\n");
+      st_results.append("Total nodes evaluated             : "+nodes.size()+"\n");      
+      st_results.append("Total nodes                       : "+node_id_type.get(0).size()+"\n");      
+      st_results.append("Node (unassigned)                 : "+unassigned_node+"\n");  
+      st_results.append("Node type 1 (perfect)             : "+node_id_type.get(1).size()+"\n");
+      st_results.append("Node type 2 (inclusion)           : "+node_id_type.get(2).size()+"\n");
+      st_results.append("Node type 3 (overlap)             : "+node_id_type.get(3).size()+"\n");
+      st_results.append("Node type 4 (disjoint)            : "+node_id_type.get(4).size()+"\n");
+      st_results.append("===============================================================================\n");
       
       if (total_states>1) {
           String sti=state_strings.get(state_strings.size()-1);
-          st.append("states evaluated: "+sti+"\n");
-          st.append("Taxa->Character(column)|Value\n");
-          st.append("----------------------------------------\n");
+          st_results.append("States evaluated : "+sti+"\n");
+          st_results.append("Taxa->Character(column)|Value\n");
+          st_results.append("--------------------------------------------------------------------------------\n");
           
           for (int i=0; i<this.states.size();i++) {
                  state s=states.get(i);
                  //--This might fail if there is no label
                  if (this.charlabels.size()>0) {
-                    st.append(this.label.get(s.pos_i)+"->"+this.charlabels.get(s.pos_j)+"|"+sti.charAt(i)+"\n");
+                    st_results.append(this.label.get(s.pos_i)+"->"+this.charlabels.get(s.pos_j)+"|"+sti.charAt(i)+"\n");
                  } else {
-                     st.append(this.label.get(s.pos_i)+"->"+(s.pos_j+1)+"|"+sti.charAt(i)+"\n");
+                     st_results.append(this.label.get(s.pos_i)+"->"+(s.pos_j+1)+"|"+sti.charAt(i)+"\n");
                  }
           }
-      st.append("===============================================================================\n");
+      st_results.append("===============================================================================\n");
    
       }
       
-      System.out.println(st);     
+      System.out.println(st_results);     
       
       try {
           PrintWriter pw=new PrintWriter(new FileWriter(new File(filename+"_stat.txt")));
           
           pw.println(st_option);
-          pw.println(st);
+          pw.println(st_results);
           pw.close();
       } catch(Exception e) {}
       
@@ -684,8 +703,8 @@ String[][] charmatrix() {
           
          
            System.out.println("================================ SUMMARY ======================================");
-           System.out.println("Network\tVertex\tEdges\tDensity");
-           System.out.println("----------------------------------------");
+           System.out.println("Network    \tVertex\tEdges\tDensity");
+           System.out.println("--------------------------------------------------------------------------------");
           
            for (int type=0; type<4;type++) {
               graph g=new graph();
@@ -742,7 +761,7 @@ String[][] charmatrix() {
               }
               g.total_nodes=g.id_to_old_id.size();
                             
-              System.out.println(""+(type==0?"complet":type)+"\t"+g.total_nodes+"\t"+g.total_edges+" \t"+g.density());
+              System.out.println(""+(type==0?"complete    \t":type+"           \t")+g.total_nodes+"\t"+g.total_edges+" \t"+g.density());
               //--calculate some statistic on each graph               
              
               if (type==0) {
@@ -873,7 +892,7 @@ String[][] charmatrix() {
           
           //--output node statistics in/out degress
           util u4=new util();
-          System.out.println("----------------------------------------");
+          System.out.println("--------------------------------------------------------------------------------");
           System.out.println("\nSaving vertex degree information to "+filename+"_degrees.txt");
           u4.open(filename+"_degrees.txt");
           u4.println("nodeid\tin_degree1\tout_degree1\tin_degree2\tout_degree2\tin_degree3\tout_degree3");
@@ -921,7 +940,7 @@ String[][] charmatrix() {
                  
                   total_progressive+=Progressive_transition[n.id].size();
                   pw.println(n.id+"\t"+(contain_taxa?"x":" ")+"\t"+(node_id_type.get(1).containsKey(n.id)?"x":" ")+"\t"+(node_id_type.get(2).containsKey(n.id)?"x":" ")+
-                         "\t"+(node_id_type.get(3).containsKey(n.id)?"x":" ")+"\t"+(node_id_type.get(0).containsKey(n.id)?"x":" ")+"\t"+n.index+"\t"+n.state_matrix+"\t"+n.complete_name+"\t"+
+                         "\t"+(node_id_type.get(3).containsKey(n.id)?"x":" ")+"\t"+(node_id_type.get(0).containsKey(n.id)?"x":" ")+"\t"+n.column+"\t"+n.state_matrix+"\t"+n.complete_name+"\t"+
                           (CC_info_type1[n.id]==null?" ":CC_info_type1[n.id])+"\t"+
                           (CC_info_complete[n.id]==null?" ":CC_info_complete[n.id])+"\t"+
                           (local_articulation_point[n.id]?"x":" ")+"\t"+(global_articulation_point[n.id]?"x":" ")+"\t"+
@@ -995,7 +1014,7 @@ String[][] charmatrix() {
                     }
                     n.state_label=state;                                           
                     n.state_matrix=s;     
-                    n.index=(i+1);
+                    n.column=(i+1);
                     n.multistate=get_node_multistate(n);
                     nodes.add(n);                    
                     identification.put(n.name,n.id);
@@ -1022,6 +1041,10 @@ String[][] charmatrix() {
         type_edge=new int[total_edges];
         taxa_edge=new int[total_edges];
         count_edge=new int[total_edges];
+        //--
+        type4_src_edge=new int[total_edges];
+        type4_dest_edge=new int[total_edges];
+        
         ///////////////////////////////////
         /// Allocate edge and set as unset
        int l2=nodes.size();    
@@ -1029,11 +1052,12 @@ String[][] charmatrix() {
               for (int i=0; i<l2;i++) {
                   for (int j=0; j<l2;j++) {
                       if (i<j) {
-                        src_edge[p]=nodes.get(i).id;                              
-                        dest_edge[p]=nodes.get(j).id;
-                        count_edge[p]=0;
+                        src_edge[p]=-1;                             
+                        dest_edge[p]=-1;
+                        type4_src_edge[p]=-1;
+                        type4_dest_edge[p]=-1;                        
                         type_edge[p]=-1;
-                        taxa_edge[p]=-1;
+                        taxa_edge[p]=-1;                        
                         p++;
                       }
                   }
@@ -1049,16 +1073,17 @@ String[][] charmatrix() {
           state_strings.add(solution);
             ///////////////////////////////
       // Bipartition
-       
+            String solution2=""+(state_id+1);
+            if (solution.isEmpty()) solution2="";
             String f=filename+".bipartite";
-           String f2=filename+"_complete_"+solution+".txt";
+            String f2=filename+"_"+solution2+"_complete.txt";
                    
             
-            String f_complete=f+"_complete_"+solution+".txt";
-            String f_1= f+"_"+solution+"_1.txt";
-            String f_2= f+"_"+solution+"_2.txt";
-            String f_3= f+"_"+solution+"_3.txt";
-            String f_id= f+"_"+solution+"_id.txt";          
+            String f_complete=f+"_"+solution2+"_complete.txt";
+            String f_1= f+"_"+solution2+"_1.txt";
+            String f_2= f+"_"+solution2+"_2.txt";
+            String f_3= f+"_"+solution2+"_3.txt";
+            String f_id= f+"_"+solution2+"_id.txt";          
             if (bipartite) {
                 output_biparition_complete.open(f_complete);
             
@@ -1069,22 +1094,27 @@ String[][] charmatrix() {
                 bipartite_index=nodes.size(); //starting bipartition id
             }
           System.out.println("===============================================================================");
-          System.out.println("Current iteration : "+(state_id+1)+"/"+max_iter+ " (states: "+(solution.equals("")?"none":solution)+")\n(saving to: "+f2+")");
+          System.out.println("Current iteration : "+(state_id+1)+"/"+max_iter+ "\nStates evaluated : "+(solution.equals("")?"none":solution)+"\n(saving to: "+f2+")");
           System.out.println("===============================================================================");
-         
-         
+         this.st_results=new StringBuilder();
+          st_results.append("===============================================================================\n");
+          st_results.append("Current iteration : "+(state_id+1)+"/"+max_iter+ "\nStates evaluated  : "+(solution.equals("")?"none":solution)+"\n(saving to: "+f2+")\n");
+          st_results.append("===============================================================================\n");
         //--Precompute the partition
          //Reset OR not? TO DO. IF maxiter is not set, we should pile up results?
             
          this.total_edge=0; 
+         this.type4_total_edge=0;
          this.node_id_type.get(0).clear();
          this.node_id_type.get(1).clear();
          this.node_id_type.get(2).clear();
          this.node_id_type.get(3).clear();
+         this.node_id_type.get(4).clear();
+        
           for (int i=0; i<nodes.size();i++) {                       
               //--This is new, we do it for the node
               node n=nodes.get(i);                            
-              ArrayList<String> stris=extract_char(n.index-1);        
+              ArrayList<String> stris=extract_char(n.column-1);        
               n.partition=new BitVector(stris.size());
               for (int j=0; j<stris.size();j++) {
                   if (stris.get(j).equals(n.state_matrix)) {
@@ -1102,7 +1132,7 @@ String[][] charmatrix() {
               long timerunning=System.currentTimeMillis();              
               for (int i=0; i<l;i++) {
                   for (int j=0; j<l;j++) {
-                      if (i<j&&nodes.get(i).index!=nodes.get(j).index) {                                                            
+                      if (i<j&&nodes.get(i).column!=nodes.get(j).column) {                                                            
                                 compute_persistance_and_bipartition(nodes.get(i), nodes.get(j));
                                 k++;
                                 
@@ -1122,14 +1152,15 @@ String[][] charmatrix() {
                  output_biparition_2.close();
                 output_biparition_3.close();     
              }
-                if (!nooutput) export_edgelist(filename+"_"+solution);   
+                if (!nooutput) export_edgelist(filename+"_"+solution2);   
                 if (save_graphml) {           
-                     export_graphml(filename+"_"+solution+"_complete",0);
-                     export_graphml(filename+"_"+solution+"_1",1);
-                     export_graphml(filename+"_"+solution+"_2",2);
-                     export_graphml(filename+"_"+solution+"_3",3);
+                     export_graphml(filename+"_"+solution2+"_complete",0);
+                     export_graphml(filename+"_"+solution2+"_1",1);
+                     export_graphml(filename+"_"+solution2+"_2",2);
+                     export_graphml(filename+"_"+solution2+"_3",3);
+                     export_graphml(filename+"_"+solution2+"_4",4);
                 }
-                display_result(filename+"_"+solution);
+                display_result(filename+"_"+solution2);
                 if (this.bipartite) { 
                     System.out.println("=============================== BIPARTITION ===================================");                
                     System.out.println("Saving bipartition files to : "+f_complete);
@@ -1150,62 +1181,19 @@ String[][] charmatrix() {
             } //--End state
                  return true;
     }    
-    
-          public void prune(int min_edge) {
-              for (node n:nodes) {
-                  if (n.edgecount<=min_edge) {
-                      node_id_type.get(0).remove(n.id);
-                      node_id_type.get(1).remove(n.id);
-                      node_id_type.get(2).remove(n.id);
-                      node_id_type.get(3).remove(n.id);
-                  }
-              }
-              
-              
-          }
-
-//          //--Get the numbering for this vertex
-//          public static int get_vertex(ArrayList<Integer> query) {
-//              if (vertex_numbering.containsKey(query)) return vertex_numbering.get(query);     
-//              int n=vertex_numbering.size();
-//              vertex_numbering.put(query, n);
-//              vertex_numbering_inv.put(n,query);
-//              return n;
-//          }
-
-          public void printCharMatrix() {
+  
+  /**
+   * Output to stdout the present char. matrix
+   */  
+  public void printCharMatrix() {
               for (int i=0;i<ntax;i++) {
                   System.out.print(label.get(i)+"\t");
                   for (int j=0; j<nchar;j++) {
                       System.out.print(char_matrix[i][j]+"\t"); 
                   }
                   System.out.println("");
-      }
-  }
-  
-  public void find_duplicate_partition() {
-      int len=precomp_partitions.length;
-      HashMap<ArrayList<ArrayList<Integer>>,Integer> tmp=new HashMap<ArrayList<ArrayList<Integer>>,Integer>();
-      
-      for (int i=0; i<len;i++) {
-          ArrayList<ArrayList<Integer>> p=precomp_partitions[i];
-          if (tmp.containsKey(p)) {
-              tmp.put(p, tmp.get(p)+1);
-          } else {
-              tmp.put(p, 1);
-          }          
-      }
-      int c=0;
-      for (int i:tmp.values()) {
-          if (i>2) {
-              System.out.println(i);
-              c+=i;
-          }
-      }
-      System.out.println(c);
-     
-      
-  }
+         }
+    }
   
   //--Separate the graph 
    public void export_edgelist(String filename) {
@@ -1238,7 +1226,14 @@ String[][] charmatrix() {
                 for (int i=0; i<total_edge;i++) {               
                    if (type_edge[i]==3) pw.println(""+src_edge[i]+"\t"+dest_edge[i]+"\t"+type_edge[i]+"\t"+taxa_edge[i]);                                 
                 }  
-            pw.close();     
+            pw.close();
+            //-Type 4
+            pw=new PrintWriter(new FileWriter(new File(filename+"_4.txt")));                       
+                pw.println("#src_id\tdest_id\tedge_type");
+                for (int i=0; i<type4_total_edge;i++) {               
+                   pw.println(""+type4_src_edge[i]+"\t"+type4_dest_edge[i]+"\t4");                                 
+                }  
+            pw.close();
             //--Dict
             Collections.sort(nodes);
              pw=new PrintWriter(new FileWriter(new File(filename+"_id.txt")));      
@@ -1271,7 +1266,7 @@ String[][] charmatrix() {
                //pw.println("<key id='r1' for='edge' attr.name='randindex' attr.type='double'/>");
                pw.println("<key id='k1' for='edge' attr.name='total_shared_taxa' attr.type='double'/>");
                
-               pw.println("<key attr.name='interaction' attr.type='string' for='egde' id='interaction'/>");             
+               pw.println("<key attr.name='k13' attr.type='string' for='egde' id='interaction'/>");             
                pw.println("<key id='k3' for='node' attr.name='fullname' attr.type='string'/>");
                pw.println("<key id='k4' for='node' attr.name='number_of_taxa' attr.type='double'/>");               
                pw.println("<key id='k5' for='node' attr.name='partition' attr.type='string'/>");
@@ -1297,35 +1292,47 @@ String[][] charmatrix() {
                     pw.println("<node id='"+n.name+"'>");
                     pw.println("<data key='k3'>"+n.complete_name+"</data>");
                     pw.println("<data key='k4'>"+n.count+"</data>");                    
+                   if (type!=4) {
                     pw.println("<data key='k6'>"+n.edgecount+"</data>");
-                    pw.println("<data key='k7'>"+n.index+"</data>");
+                    pw.println("<data key='k7'>"+n.column+"</data>");
                     pw.println("<data key='k8'>"+n.char_label+"</data>");
                     pw.println("<data key='k9'>"+n.state_label+"</data>");
                     pw.println("<data key='k10'>"+n.state_matrix+"</data>");
                     pw.println("<data key='k61'>"+n.in_edgecount+"</data>");
                     pw.println("<data key='k62'>"+n.out_edgecount+"</data>");
                     pw.println("<data key='k11'>"+n.total_taxa+"</data>");
+                   } else {
+                     pw.println("<data key='k8'>"+n.char_label+"</data>");
+                     pw.println("<data key='k9'>"+n.state_label+"</data>");
+                     pw.println("<data key='k10'>"+n.state_matrix+"</data>");
+                   }
                     pw.println("</node>");
                    }
                }      
-               
-               for (int i=0; i<total_edge;i++) {
-                  
-                  if (type==type_edge[i]||type==0) {
-                   if (type==1||type==3) {
-                       pw.println("<edge directed='false' source='"+inv_identification.get(src_edge[i])+"' target='"+inv_identification.get(dest_edge[i])+"'>");
-                   } else {
-                       pw.println("<edge directed='true' source='"+inv_identification.get(src_edge[i])+"' target='"+inv_identification.get(dest_edge[i])+"'>");
-                   }
-                    pw.println("<data key='k1'>"+taxa_edge[i]+"</data>");                    
-                    pw.println("<data key='k2'>"+type_edge[i]+"</data>");
-                    //--TO DO
-                    //pw.println("<data key='r1'>"+e.randindex+"</data>");
-                    pw.println("<data key='interaction'>"+m_type[type_edge[i]]+"</data>");
-                   pw.println("</edge>");
-                  }
-                  // if (e.type!=1) pw.println("<edge directed='true' source='"+e.source_str+"' target='"+e.dest_str+"'/>");
-                   //if (e.type==1) pw.println("<edge  directed='false' source='"+e.source_str+"' target='"+e.dest_str+"'/>");
+               if (type!=4) {
+                for (int i=0; i<total_edge;i++) {                  
+                   if (type==type_edge[i]||type==0) {
+                    if (type==1||type==3) {
+                        pw.println("<edge directed='false' source='"+inv_identification.get(src_edge[i])+"' target='"+inv_identification.get(dest_edge[i])+"'>");
+                    } else {
+                        pw.println("<edge directed='true' source='"+inv_identification.get(src_edge[i])+"' target='"+inv_identification.get(dest_edge[i])+"'>");
+                    }
+                     pw.println("<data key='k1'>"+taxa_edge[i]+"</data>");                    
+                     pw.println("<data key='k2'>"+type_edge[i]+"</data>");
+                     //--TO DO
+                     //pw.println("<data key='r1'>"+e.randindex+"</data>");
+                     pw.println("<data key='k13'>"+m_type[type_edge[i]]+"</data>");
+                    pw.println("</edge>");
+                   } 
+                   // if (e.type!=1) pw.println("<edge directed='true' source='"+e.source_str+"' target='"+e.dest_str+"'/>");
+                    //if (e.type==1) pw.println("<edge  directed='false' source='"+e.source_str+"' target='"+e.dest_str+"'/>");
+                }
+               } else {
+                    for (int i=0; i<type4_total_edge;i++) {
+                        pw.println("<edge directed='false' source='"+inv_identification.get(type4_src_edge[i])+"' target='"+inv_identification.get(type4_dest_edge[i])+"'>");
+                          pw.println("<data key='k13'>4</data>");
+                           pw.println("</edge>");
+                    }
                }
                pw.println("</graph>");
                pw.println("</graphml>");
@@ -1337,10 +1344,10 @@ String[][] charmatrix() {
    
      /**
       * This must be called after the preparation of the char matrix
+      * This prepate the multiples-states matrix
       */
      public void create_states() {
-         ArrayList<String> st=new ArrayList<String>();
-         int total=0;
+         ArrayList<String> st=new ArrayList<String>();        
          this.current_state_matrix=new String[this.ntax][this.nchar];        
          for (int i=0; i<this.ntax;i++) {
              for (int j=0; j<this.nchar;j++) {
@@ -1356,13 +1363,16 @@ String[][] charmatrix() {
                      st.add(s.state);
                  }
              }
-         }          
+         }         
      }
      
      public String prepare_current_state_matrix(int state_id, boolean rand) {
           String current_state=""; 
+          if (random>0&&random>total_states) {
+              random=0;              
+          } 
          boolean ok=false;                  
-         if (!rand&&total_states<1000) {
+         if (!rand&&total_states<1000&&random==0) {
              //--Generate the combinations if not generated
             if (state_strings.isEmpty()) {
                 ArrayList<String> input=new ArrayList<String>();
@@ -1387,8 +1397,7 @@ String[][] charmatrix() {
                 for (int i=0; i<states.size();i++) {
                       state s=states.get(i);
                       //--Randomly pick a state
-                       LFSR258  r=new  LFSR258();
-                      
+                       LFSR258  r=new  LFSR258();                      
                       int pos=r.nextInt(0,s.state.length()-1);
                       current_state+=s.state.charAt(pos);
                       this.current_state_matrix[s.pos_i][s.pos_j]=""+s.state.charAt(pos);
@@ -1435,57 +1444,12 @@ String[][] charmatrix() {
          }
          return temp;
      }
-
-//     /**
-//      * This handle the creation of bipartite graph
-//      * @param node1
-//      * @param node2 
-//      */
-//     public void compute_bipartition(node node1, node node2) {
-//         BitVector ids=util.intersection_Bit(node1, node2);
-//         int bipartite_id=bipartite_index;
-//         String id=ids.toString();
-//         if (!ids.equals(new BitVector(ntax))) {
-//             if (bipartite_node_id.containsKey(ids)) {
-//                   bipartite_id=bipartite_node_id.get(ids);
-//             } else {
-//                  bipartite_node_id.put(id,bipartite_index);
-//                  bipartite_index++;
-//             }
-//         } 
-//                    ArrayList<Integer> tmp=util.intersectBitResult(node1.partition,node2.partition);
-//                     int total=tmp.size();
-//                         //--Get the type here
-//                        int type=4; //--default
-//                        if (total==node1.total_taxa&&total==node2.total_taxa) {
-//                            type=1;
-//                        } else 
-//                        if (total<node2.total_taxa&&total==node1.total_taxa) {
-//                            type=2;
-//                        } else 
-//                        if (total<node1.total_taxa&&total==node2.total_taxa) {
-//                            type=5;
-//                        } else if (total>0) type=3;
-//                       
-//                        if (type!=4) {
-//                            int source_index=node1.id;
-//                            int dest_index=node2.id;
-//                            if (type==5) {
-//                                type=2;
-//                                int tt=source_index;
-//                                source_index=dest_index;
-//                                dest_index=tt;                                
-//                            } 
-//                           
-//                                if (bipartite_type==0||type==bipartite_type) {
-//                                    output_biparition_complete.println(bipartite_id+"\t"+source_index);
-//                                    output_biparition_complete.println(bipartite_id+"\t"+dest_index);
-//                                } 
-//                            
-//                        } //--End not 4         
-//     }
      
-     
+     /**
+      * This is the main function to compute the type of link between 2 nodes
+      * @param node1
+      * @param node2 
+      */
      public void compute_persistance_and_bipartition(node node1, node node2) {
                         BitVector ids=util.intersection_Bit(node1, node2);
                         int bipartite_id=bipartite_index;
@@ -1519,6 +1483,7 @@ String[][] charmatrix() {
                         }
                        
                         if (type!=4) {
+                            //--Type 1,2,3
                             int source_index=node1.id;
                             int dest_index=node2.id;
                             if (type==5) {
@@ -1573,7 +1538,18 @@ String[][] charmatrix() {
                                  node_id_type.get(type_edge[current_edge]).put(dest_index, type);
                                  node_id_type.get(0).put(source_index, type);
                                  node_id_type.get(0).put(dest_index, type);                                 
-        }
+                    } else {
+                       //--Type 4  --we need to ensure that this is not the same characters (column)
+                       if (node1.column!=node2.column) {
+                         
+                           type4_src_edge[type4_total_edge]=node1.id;
+                           type4_dest_edge[type4_total_edge]=node2.id;
+                            node_id_type.get(4).put(node1.id, 4);
+                            node_id_type.get(4).put(node2.id, 4);
+                           type4_total_edge++;
+                           total_type4++;
+                       }     
+                    }
 
     }   
      
@@ -1649,7 +1625,7 @@ String[][] charmatrix() {
             node1_bit.add(node1.partition);
         } else {             
             
-              ArrayList<String> s1=util.combinations(get_column(node1.index-1));
+              ArrayList<String> s1=util.combinations(get_column(node1.column-1));
               for (String p:s1) {
                 BitVector tmp= new BitVector(len);
                  for (int j=0; j<len;j++) {
@@ -1665,7 +1641,7 @@ String[][] charmatrix() {
          if (node2.multistate==1) {
         node2_bit.add(node2.partition);
         } else {
-            ArrayList<String> s2=util.combinations(get_column(node2.index-1));
+            ArrayList<String> s2=util.combinations(get_column(node2.column-1));
               for (String p:s2) {
                 BitVector tmp= new BitVector(len);
                  for (int j=0; j<len;j++) {
@@ -1694,7 +1670,7 @@ String[][] charmatrix() {
     public int get_node_multistate(node node1) {         
          int total=1;
           for (int i=0; i<this.ntax;i++) {
-             String d=this.char_matrix[i][node1.index-1];
+             String d=this.char_matrix[i][node1.column-1];
                if (d.length()>1) { 
                    if (d.indexOf(node1.state_matrix)>-1) {
                      total*=2; //--because its a binary state (either we have, or not)

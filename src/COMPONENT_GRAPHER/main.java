@@ -57,6 +57,7 @@ public class main {
         double minrand=0.0;        //--*Unused for now, the minimum randIndex to consider
         int mintaxa=1;             //--*Unused for now, the minimum number of taxa to consider
         int maxiter=1;          //--default, one iteration, get the first state
+        int random_n=0;          //--Specify that we want random partition
         String user_state_string="";//--passed user state string
         String node_information_filename="";
       
@@ -84,8 +85,6 @@ public class main {
              System.exit(-1);
          }
        
-       
-        
         // Read command line option
         for (String st:args) {
             String s=st.toLowerCase();
@@ -93,6 +92,8 @@ public class main {
             if (s.indexOf("-minrand=")>-1) minrand=Double.valueOf(st.substring(9));
             if (s.indexOf("-maxiter=")>-1) maxiter=Integer.valueOf(st.substring(9));
             if (s.indexOf("-mintaxa=")>-1) minrand=Integer.valueOf(st.substring(9));
+            if (s.indexOf("-random=")>-1) random_n=Integer.valueOf(st.substring(8));
+            if (s.indexOf("-states=")>-1) user_state_string=st.substring(8);
             if (s.indexOf("-undefined")>-1) undefined=true;
             if (s.indexOf("-multiple")>-1) multiple=true;            
             if (s.indexOf("-show_matrix")>-1) show_matrix=true;            
@@ -109,9 +110,12 @@ public class main {
             if (s.indexOf("-bipartite")>-1) {
              bipartite=true;
             }
-        } 
-         
+        }         
+         if (random_n>0&&maxiter==1) {             
+             maxiter=random_n;
+         }
          d.filename=filename;
+         d.random=random_n;
          d.nooutput=nooutput;
          d.bipartite=bipartite;
          d.save_graphml=save_graphml;
@@ -121,6 +125,7 @@ public class main {
          d.maxiter=maxiter;
          d.min_taxa=mintaxa;
          d.save_summary=save_summary;
+         d.user_state_string=user_state_string;
          if (show_matrix) d.printCharMatrix();
          
          //--If there is an associated character file, use it.
@@ -147,7 +152,8 @@ public class main {
           
           System.out.println("Options :");
           System.out.println("\t-taxa=list   : Specify some taxas tagged in the summary file\n\t\t\t(list separated by comma e.g. A,B,C).");
-          System.out.println("\t-maxiter     : Maximum number of iteration to search in case of \n\t\t\tundefined states in the input matrix (e.g. {1,2,3}).");
+          System.out.println("\t-maxiter=9   : Maximum number of iterations to search in case of \n\t\t\tundefined states in the input matrix (e.g. {1,2,3})\n\t\t(default=1).");
+          System.out.println("\t-random=9    : Specify the number of random iterations if we have multiple states");
           System.out.println("\t-undefined   : Remove column containing undefined states (e.g. ?,-)");
           System.out.println("\t-multiple    : Remove column containing multiple states (e.g. {1,2,3}).");          
           System.out.println("\t-bipartite   : Output bipartite file.");
@@ -157,18 +163,19 @@ public class main {
          
           System.out.println("================================= OUTPUTS =====================================");
           System.out.println("\nFor each iteration (see maxiter parameter) :\n");
-          System.out.println("\tmatrixfile_XXX_complete.txt : edge-list of the complete network (types 1,2,3).");
-          System.out.println("\tmatrixfile_XXX_1.txt       : edge-list of the type 1 connections.");
-          System.out.println("\tmatrixfile_XXX_2.txt       : edge-list of the type 2 connections.");
-          System.out.println("\tmatrixfile_XXX_3.txt       : edge-list of the type 3 connection.");
+          System.out.println("\tmatrixfile_XXX_complete.txt: edge list of the complete network (types 1,2,3).");
+          System.out.println("\tmatrixfile_XXX_1.txt       : edge list of the type 1 connections.");
+          System.out.println("\tmatrixfile_XXX_2.txt       : edge list of the type 2 connections.");
+          System.out.println("\tmatrixfile_XXX_3.txt       : edge list of the type 3 connection.");
+          System.out.println("\tmatrixfile_XXX_4.txt       : edge list of the type 4 connection.");
           System.out.println("\tmatrixfile_XXX_id.txt      : identification for each node");
           System.out.println("\tmatrixfile_XXX_stat.txt    : statistics and parameters for this run.");
-          System.out.println("\t*XXX will be replace by the run used caracters in the matrix, \n\t or by nothing. ");
+          System.out.println("\t*XXX will be replace by the iteration number if there is multiple states. ");
           System.out.println("\nIf the [-bipartite] option is use, the following files will also be produced:");
           System.out.println("\tmatrixfile.bipartite_XXX_complete.txt : bipartite graph of the complete network.");
           System.out.println("\tmatrixfile.bipartite_XXX_1.txt       : bipartite graph of the type 1 connections.");
           System.out.println("\tmatrixfile.bipartite_XXX_2.txt       : bipartite graph of the type 2 connections.");
-          System.out.println("\tmatrixfile.bipartite_XXX_3.txt       : bipartite graph of the type 3 connection.");
+          System.out.println("\tmatrixfile.bipartite_XXX_3.txt       : bipartite graph of the type 3 connection.");          
           System.out.println("\tmatrixfile.bipartite_XXX_id.txt      : identification for each node");
           System.out.println("\nIf the [-summary] option is use, the following file will also be produced:");
           System.out.println("\tmatrixfile_XXX_summary.txt           : summary statistics for this run.");
@@ -177,6 +184,7 @@ public class main {
           System.out.println("\tmatrixfile_XXX_1.graphml");
           System.out.println("\tmatrixfile_XXX_2.graphml");
           System.out.println("\tmatrixfile_XXX_3.graphml");
+          System.out.println("\tmatrixfile_XXX_4.graphml");
           System.out.println("===============================================================================");
           
           System.exit(0);

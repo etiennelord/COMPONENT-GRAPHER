@@ -37,7 +37,7 @@ public class node implements Comparable{
     public String state_label="";
     public String state_matrix=""; //State in the matrix
     
-    public int index=0; //--Index position
+    public int column=0; //--column (index starting at 1)
     public int id=0; //id in the vertex system
     public ArrayList<Integer>identification=new ArrayList<Integer>(); //taxa or node position    
     public ArrayList<Integer> source_ids=new ArrayList<Integer>(); //source taxa and count
