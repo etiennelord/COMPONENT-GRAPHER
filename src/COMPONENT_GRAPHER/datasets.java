@@ -577,8 +577,8 @@ String[][] charmatrix() {
           System.out.print("Minimum common shared taxa           : "+(int)(this.min_taxa*100)+"% ");
           st_option.append("Minimum common shared taxa           : "+(int)(this.min_taxa*100)+"% ");
           this.min_taxa=Math.ceil(this.ntax*this.min_taxa);
-          System.out.println(" ("+this.min_taxa+")");
-          st_option.append(" ("+this.min_taxa+")\n");
+          System.out.println(" ("+(int)this.min_taxa+")");
+          st_option.append(" ("+(int)this.min_taxa+")\n");
       } else if (this.min_taxa>1) {
           System.out.println("Minimum common shared taxa           : "+(int)this.min_taxa);
           st_option.append("Minimum common shared taxa           : "+(int)this.min_taxa+"\n");
