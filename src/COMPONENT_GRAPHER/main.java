@@ -55,7 +55,7 @@ public class main {
         boolean show_matrix=false; //--Display to stdout the input matrix
         boolean nooutput=false;    //--Silence output
         double minrand=0.0;        //--*Unused for now, the minimum randIndex to consider
-        int mintaxa=1;             //--*Unused for now, the minimum number of taxa to consider
+        float mintaxa=1;         //-- the minimum number of taxa to consider
         int maxiter=1;          //--default, one iteration, get the first state
         int random_n=0;          //--Specify that we want random partition
         String user_state_string="";//--passed user state string
@@ -91,7 +91,15 @@ public class main {
             if (s.indexOf("-output=")>-1) filename=st.substring(8);         
             if (s.indexOf("-minrand=")>-1) minrand=Double.valueOf(st.substring(9));
             if (s.indexOf("-maxiter=")>-1) maxiter=Integer.valueOf(st.substring(9));
-            if (s.indexOf("-mintaxa=")>-1) minrand=Integer.valueOf(st.substring(9));
+            if (s.indexOf("-mintaxa=")>-1) {
+                if (s.indexOf("%")>-1) {
+                    st=st.substring(0, st.length()-1);
+                     mintaxa=Float.valueOf(st.substring(9));
+                     mintaxa/=100;
+                } else {
+                    mintaxa=Float.valueOf(st.substring(9));
+                }
+            }
             if (s.indexOf("-random=")>-1) random_n=Integer.valueOf(st.substring(8));
             if (s.indexOf("-variation=")>-1) user_state_string=st.substring(11);
             if (s.indexOf("-undefined")>-1) undefined=true;
@@ -156,6 +164,7 @@ public class main {
           
           System.out.println("Options :");
           System.out.println("\t-taxa=list   : Specify some taxas tagged in the summary file\n\t\t\t(list separated by comma e.g. A,B,C).");
+          System.out.println("\t-mintaxa=9[%]: The minimum number of taxa (or percent) to include one edge.");
           System.out.println("\t-maxiter=9   : Maximum number of variations to search in case of \n\t\t\tundefined states in the input matrix (e.g. {1,2,3})\n\t\t\t*Note: the first 1000 iterations are ordered and not \n\t\t\trandom. (default=1). ");
           System.out.println("\t-random=9    : Force a number of random variations.");
           System.out.println("\t-undefined   : Remove column containing undefined states (e.g. ?,-)");

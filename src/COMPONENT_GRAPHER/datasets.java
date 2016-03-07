@@ -85,7 +85,7 @@ public class datasets {
    public HashMap<String, Integer> index_label=new HashMap<String, Integer>();
    public ArrayList<String> label=new ArrayList<String>(); //--Taxa name
    public ArrayList<String> state=new ArrayList<String>(); //--line of char. for the taxa 
-   public static Pattern isNumbers=Pattern.compile("([0-9]{1,})\\s*([0-9]{1,})");   
+   public static Pattern isNumbers=Pattern.compile("^\\s{0,}([0-9]{1,})\\s{1,}([0-9]{1,})$");   
    public String title="";
    public String filename="";   
    public int ntax=0;
@@ -401,7 +401,7 @@ String[][] charmatrix() {
            
             Matcher m=isNumbers.matcher(line);
             if (m.find()&&i==0)  {
-                //--Skip line
+                //--Skip first line for phylip matrix
             } else {                
                   ArrayList<String> d=extract_matrix(line);            
                   label.add(d.get(0));	
@@ -573,6 +573,17 @@ String[][] charmatrix() {
     */
   public void compute() {       
       get_info();
+      if (this.min_taxa<1) {
+          System.out.print("Minimum common shared taxa           : "+(int)(this.min_taxa*100)+"% ");
+          st_option.append("Minimum common shared taxa           : "+(int)(this.min_taxa*100)+"% ");
+          this.min_taxa=Math.ceil(this.ntax*this.min_taxa);
+          System.out.println(" ("+this.min_taxa+")");
+          st_option.append(" ("+this.min_taxa+")\n");
+      } else if (this.min_taxa>1) {
+          System.out.println("Minimum common shared taxa           : "+(int)this.min_taxa);
+          st_option.append("Minimum common shared taxa           : "+(int)this.min_taxa+"\n");
+      } 
+      
       //--Clear
         for (int i=0; i<5;i++) {
            node_id_type.add(new HashMap<Integer,Integer>());
@@ -1208,30 +1219,30 @@ String[][] charmatrix() {
        try {            
             //-Type 0
             PrintWriter pw=new PrintWriter(new FileWriter(new File(filename+"_complete.txt")));                                       
-            pw.println("#src_id\tdest_id\tedge_type\tnumber_common_taxa");
+            pw.println("#src_id\tdest_id\tedge_type\tnumber_common_taxa\tpercent_common_taxa");
             for (int i=0; i<this.total_edge;i++) {               
-                    if (type_edge[i]!=-1) pw.println(""+src_edge[i]+"\t"+dest_edge[i]+"\t"+type_edge[i]+"\t"+taxa_edge[i]);                     
+                    if (type_edge[i]!=-1) pw.println(""+src_edge[i]+"\t"+dest_edge[i]+"\t"+type_edge[i]+"\t"+taxa_edge[i]+"\t"+(taxa_edge[i]/this.ntax));                     
                 }    
             pw.close();   
             //-Type 1
             pw=new PrintWriter(new FileWriter(new File(filename+"_1.txt")));                       
-                pw.println("#src_id\tdest_id\tedge_type\tnumber_common_taxa"); 
+                pw.println("#src_id\tdest_id\tedge_type\tnumber_common_taxa\tpercent_common_taxa"); 
                 for (int i=0; i<total_edge;i++) {               
-                   if (type_edge[i]==1) pw.println(""+src_edge[i]+"\t"+dest_edge[i]+"\t"+type_edge[i]+"\t"+taxa_edge[i]);                     
+                   if (type_edge[i]==1) pw.println(""+src_edge[i]+"\t"+dest_edge[i]+"\t"+type_edge[i]+"\t"+taxa_edge[i]+"\t"+(taxa_edge[i]/this.ntax));                     
                 }  
             pw.close();            
             //--Type 2
             pw=new PrintWriter(new FileWriter(new File(filename+"_2.txt")));                       
-                pw.println("#src_id\tdest_id\tedge_type\tnumber_common_taxa");
+                pw.println("#src_id\tdest_id\tedge_type\tnumber_common_taxa\tpercent_common_taxa");
                 for (int i=0; i<total_edge;i++) {               
-                  if (type_edge[i]==2) pw.println(""+src_edge[i]+"\t"+dest_edge[i]+"\t"+type_edge[i]+"\t"+taxa_edge[i]);                                        
+                  if (type_edge[i]==2) pw.println(""+src_edge[i]+"\t"+dest_edge[i]+"\t"+type_edge[i]+"\t"+taxa_edge[i]+"\t"+(taxa_edge[i]/this.ntax));                                        
                 }  
             pw.close();                
 //            //-Type 3
             pw=new PrintWriter(new FileWriter(new File(filename+"_3.txt")));                       
-                pw.println("#src_id\tdest_id\tedge_type\tnumber_common_taxa");
+                pw.println("#src_id\tdest_id\tedge_type\tnumber_common_taxa\tpercent_common_taxa");
                 for (int i=0; i<total_edge;i++) {               
-                   if (type_edge[i]==3) pw.println(""+src_edge[i]+"\t"+dest_edge[i]+"\t"+type_edge[i]+"\t"+taxa_edge[i]);                                 
+                   if (type_edge[i]==3) pw.println(""+src_edge[i]+"\t"+dest_edge[i]+"\t"+type_edge[i]+"\t"+taxa_edge[i]+"\t"+(taxa_edge[i]/this.ntax));                                 
                 }  
             pw.close();
             //-Type 4
@@ -1494,7 +1505,7 @@ String[][] charmatrix() {
                             type=3;
                         }
                        
-                        if (type!=4) {
+                        if (type!=4&&total>=this.min_taxa) {
                             //--Type 1,2,3
                             int source_index=node1.id;
                             int dest_index=node2.id;
@@ -1550,7 +1561,7 @@ String[][] charmatrix() {
                                  node_id_type.get(type_edge[current_edge]).put(dest_index, type);
                                  node_id_type.get(0).put(source_index, type);
                                  node_id_type.get(0).put(dest_index, type);                                 
-                    } else {
+                    } else if (type==4) {
                        //--Type 4  --we need to ensure that this is not the same characters (column)
                        if (node1.column!=node2.column) {
                          
