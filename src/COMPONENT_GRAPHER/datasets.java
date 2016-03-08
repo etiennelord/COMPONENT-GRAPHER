@@ -29,12 +29,10 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import umontreal.iro.lecuyer.rng.LFSR258;
-import umontreal.iro.lecuyer.rng.RandomStreamBase;
 import umontreal.iro.lecuyer.util.BitVector;
 
 /**
@@ -86,6 +84,7 @@ public class datasets {
    public ArrayList<String> label=new ArrayList<String>(); //--Taxa name
    public ArrayList<String> state=new ArrayList<String>(); //--line of char. for the taxa 
    public static Pattern isNumbers=Pattern.compile("^\\s{0,}([0-9]{1,})\\s{1,}([0-9]{1,})$");   
+  
    public String title="";
    public String filename="";   
    public int ntax=0;
@@ -134,15 +133,9 @@ public class datasets {
    int[] type4_dest_edge;  
    int type4_total_edge=0;
    
-   //int[] rand_edge; 
-   
    ArrayList<node> nodes=new ArrayList<node>();
    
-  
-   //HashMap<Integer,Integer> edges_found=new HashMap<>();
-   
    //--Statistics
-   //HashMap<edge, Integer> edges_count=new HashMap<edge, Integer>();
    public static ConcurrentHashMap<String,Integer> identification=new ConcurrentHashMap<String,Integer>();
    public static ConcurrentHashMap<Integer,String> inv_identification=new ConcurrentHashMap <Integer,String>();
    
@@ -255,7 +248,7 @@ String[][] charmatrix() {
    
    return mat;
 }
-  // return the new matrix
+ 
   
  public Integer get_value(String s) {     
      s=s.substring(0, s.length()-1); 
@@ -268,11 +261,92 @@ String[][] charmatrix() {
       if (m.find()) {          
           return Integer.valueOf(m.group(1));
       }
-      //s=s.substring(0, s.length()-1); 
      return 0;
  }
   
+  /**
+   * Given a string, will split around space or ' ' delimiter
+   * @param data
+   * @return 
+   */
+  ArrayList<String> get_fields(String data) {
+      ArrayList<String> tmp=new ArrayList<String>();
+      String tmps="";
+      data=data+" "; // Add space to process last groups
+      boolean in_flag=false;
+      for (int i=0; i<data.length();i++) {
+          char c=data.charAt(i);
+          if (c==' '&&!tmps.isEmpty()&&!in_flag) {
+              tmps=tmps.trim(); 
+             if (tmps.endsWith(",")) tmps=tmps.substring(0, tmps.length()-1);
+             if (tmps.endsWith("/")&&tmp.size()>1) {
+                 tmp.add(tmps.substring(0, tmps.length()-1));
+                 tmp.add("/");
+             } else {
+                tmp.add(tmps);
+             } 
+             tmps="";
+          } else if (c=='\'') {
+            in_flag=!in_flag;  
+          } else if (c==','&&!tmps.isEmpty()&&!in_flag) {
+             tmps=tmps.trim(); 
+             if (tmps.endsWith(",")) tmps=tmps.substring(0, tmps.length()-1);
+             if (tmps.endsWith("/")&&tmp.size()>1) {
+                 tmp.add(tmps.substring(0, tmps.length()-1));
+                 tmp.add("/");
+             } else {
+                tmp.add(tmps);
+             } 
+             tmps="";
+          }
+          else {
+              //if (c!=' '&&!in_flag) 
+                  tmps+=c;
+          }
+      }
+      for (int i=tmp.size()-1;i>-1;i--) {
+          if (tmp.get(i).isEmpty()) tmp.remove(i);
+      }
+      return tmp;
+  }
+          
+          
+  /**
+   * Helper function for tag CHARSTATELABELS
+   * @param str 
+   */
+  public void process_char_state(String str) {
+        int total=-1;
+        // Spit string by pattern
+        ArrayList<String> tmp=get_fields(str);
+        for (String s:tmp) if (s.equals("/")) {
+            this.charlabels.add("");
+            this.statelabels.add(new ArrayList<String>());
+            total++;
+        }
+        ArrayList<String> tmps=new ArrayList<String>();
+        // start at end
+        int i=tmp.size()-1;
+        while (i>-1) {
+            String c=tmp.get(i);
+            if (c.equals("/")) {
+              this.charlabels.set(total,tmp.get(i-1));
+              this.statelabels.set(total,tmps);
+              total--;
+              tmps=new ArrayList<String>();
+              i-=3;
+            } else {
+                tmps.add(c);
+                i--;
+            }
+        }
+  }
      
+  /**
+   * Main function to load NEXUS files
+   * @param filename
+   * @return 
+   */
   boolean load_morphobank_nexus(String filename) {
         ArrayList<String> tmp_state=new ArrayList<String>();
          this.filename=filename;
@@ -280,6 +354,8 @@ String[][] charmatrix() {
 	 boolean flag_in_matrix=false;
 	 boolean flag_in_CHARLABELS=false;
 	 boolean flag_in_STATELABELS=false;
+         boolean flag_in_CHARSTATELABELS=false;
+         String tmp_char_state="";        
         int count_section=0;
   	ArrayList<String> data=loadStrings(filename);
         if (data.isEmpty()) return false;
@@ -296,6 +372,10 @@ String[][] charmatrix() {
                     if (line.indexOf("BEGIN CHARACTERS;")>-1) count_section++;
                     if ((line.indexOf("DIMENSIONS")>-1||line.indexOf("dimensions")>-1)&&line.indexOf("NCHAR")>-1||line.indexOf("nchar")>-1) this.nchar=get_value(line, "nchar=([0-9]*)");;    		  
                     if (flag_in_matrix&&line.indexOf(";")>-1) flag_in_matrix=false;	
+                     if (flag_in_CHARSTATELABELS&&(line.charAt(0)==';'||line.charAt(line.length()-1)==';')) {
+                         flag_in_CHARSTATELABELS=false;
+                         process_char_state(tmp_char_state);
+                     }	
                     if (flag_in_CHARLABELS&&(line.charAt(0)==';'||line.charAt(line.length()-1)==';')) flag_in_CHARLABELS=false;	
                     if (flag_in_STATELABELS&&(line.charAt(0)==';'||line.charAt(line.length()-1)==';')) {
                             if (tmp_state.size()>1) {
@@ -305,13 +385,16 @@ String[][] charmatrix() {
                         flag_in_STATELABELS=false;         		 	
                     }
      		// test flag	
-			if (line.indexOf("CHARLABELS")>-1||line.indexOf("charlabels")>-1) { 
+			if (line.indexOf("CHARSTATELABELS")>-1||line.indexOf("charstatelabels")>-1) { 
+                            flag_in_CHARSTATELABELS=true;			
+			} else 
+                        if (line.indexOf("CHARLABELS")>-1||line.indexOf("charlabels")>-1) { 
 				flag_in_CHARLABELS=true;			
 			} else 
 			if (line.indexOf("STATELABELS")>-1||line.indexOf("statelabels")>-1) { 
 				flag_in_STATELABELS=true;			
-			} else 
-			if (line.indexOf("MATRIX")>-1) { 
+			} else
+                        if (line.indexOf("MATRIX")>-1) { 
                             //Note: Matrix must be in Uppercase
                             flag_in_matrix=true;			
 			} else 
@@ -335,13 +418,14 @@ String[][] charmatrix() {
                                     }
                                     state.set(index,state.get(index)+d.get(1));	
                                 }
-                                //
-                                
-                                //System.out.println(d.get(0)+"|" +index+"|"+d.get(1)+"|"+d.size()+"|"+line);
-                                //System.out.println(d.get(0));
-				                                  
-			 }
-			 else 
+                         } else 
+			 if (flag_in_CHARSTATELABELS) {
+                           tmp_char_state+=line;
+                           if (line.endsWith(";")) {
+                               flag_in_CHARSTATELABELS=false;
+                               process_char_state(tmp_char_state);
+                           }
+                        } else 
 			if (flag_in_CHARLABELS) {
 				 charlabels.add(extract_charlabels(line));
                                  if (line.indexOf('/')>0) {
@@ -366,13 +450,11 @@ String[][] charmatrix() {
 			 } //--End statelabels
                 } //--End line empty
 	} //--End data 
-        //ntax=label.size();
-        //nchar=intmaxcol();
         if (count_section>1) {
-            System.err.println("Warning, more than one matrix found in file: "+filename);
+            System.err.println("Warning, more than one matrix (with tag MATRIX) found in file: "+filename);
             return false;
         }
-  this.char_matrix=charmatrix();
+     this.char_matrix=charmatrix();
     //--Create the different states
   try {
     if (this.nchar!=0) create_states(); 
@@ -537,7 +619,7 @@ String[][] charmatrix() {
        System.out.println("Total number of multistate characters: "+ this.states.size());
        System.out.println("Total number of possible variations  : "+((int)this.total_states));    
         System.out.println("Total variations tested              : "+this.maxiter);
-       if (this.random>0||((float)this.maxiter)<this.total_states) {
+       if (this.random>0||(((float)this.maxiter)<this.total_states&&this.maxiter>1)) {
            System.out.println("Iteration mode                       : random");       
        } else {
             System.out.println("Iteration mode                       : ordered");   
@@ -554,7 +636,7 @@ String[][] charmatrix() {
         st_option.append("Total number of multistate characters: "+ this.states.size()+"\n");
         st_option.append("Total number of possible variations  : "+((int)this.total_states+"\n"));   
            st_option.append("Total variations tested              : "+this.maxiter+"\n");
-       if (this.random>0||((float)this.maxiter)<this.total_states) {
+       if (this.random>0||(((float)this.maxiter)<this.total_states&&this.maxiter>1)) {
            st_option.append("Iteration mode                       : random\n");       
        } else {
              st_option.append("Iteration mode                       : ordered\n");   
@@ -646,7 +728,7 @@ String[][] charmatrix() {
                  state s=states.get(i);
                  //--This might fail if there is no label
                  if (this.charlabels.size()>0) {
-                    st_results.append(this.label.get(s.pos_i)+"->"+this.charlabels.get(s.pos_j)+"|"+sti.charAt(i)+"\n");
+                    st_results.append(this.label.get(s.pos_i)+"->"+(s.pos_j+1)+" ("+this.charlabels.get(s.pos_j)+")|"+sti.charAt(i)+"\n");
                  } else {
                      st_results.append(this.label.get(s.pos_i)+"->"+(s.pos_j+1)+"|"+sti.charAt(i)+"\n");
                  }
@@ -1433,10 +1515,7 @@ String[][] charmatrix() {
          return current_state;
      }
      
-     //--Calculate the fitness of this iteration
-     public float fitness() {
-         return 0.0f;
-     }
+    
           /**
       * This return the possible state found in a column
       * @param j
