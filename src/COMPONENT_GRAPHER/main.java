@@ -77,13 +77,6 @@ public class main {
         d.st_option.append("COMPONENT-GRAPHER v"+version+"\n"+authors+"\n");
         d.st_option.append("=============================== PARAMETERS ====================================\n");
         d.st_option.append("Command line options                 : "+d.commandline+"\n");         
-        //--Load the datafile
-        boolean r=d.load_morphobank_nexus(args[0]);               
-         if (!r||d.nchar==0||d.ntax==0) r=d.load_simple(filename);
-         if (!r||d.nchar==0||d.ntax==0) {
-             System.out.println("No file found.");
-             System.exit(-1);
-         }
        
         // Read command line option
         for (String st:args) {
@@ -112,14 +105,28 @@ public class main {
             if (s.indexOf("-summary")>-1) save_summary=true; 
             //--Given a graph, analyse it...
             if (s.indexOf("-analyse=")>-1) {
+                //--1. check if we refer to a graph or a series of graph
+                //analyze_multiple an=new analyze_multiple();
+                //an.process_path(s.substring(9));
                 //--This only printout summary statistics for this graph.
-                d.analyse(s.substring(9),1);
+                //d.analyse(s.substring(9),1);
+                //System.exit(0);
             }
             if (s.indexOf("-bipartite")>-1) {
              bipartite=true;
             }
         }         
-         if (random_n>0&&maxiter==1) {             
+         
+          boolean r=d.load_morphobank_nexus(args[0]);               
+        
+          if (!r||d.nchar==0||d.ntax==0) r=d.load_simple(filename);
+         if (!r||d.nchar==0||d.ntax==0) {
+             System.out.println("No file found.");
+             System.exit(-1);
+         }
+        
+        
+        if (random_n>0&&maxiter==1) {             
              maxiter=random_n;
          }
          if (!user_state_string.isEmpty()) {

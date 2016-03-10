@@ -1,5 +1,5 @@
 package COMPONENT_GRAPHER;
-/*
+/**
  *  COMPONENT-GRAPHER v1.0
  *  
  *  Copyright (C) 2015-2016  Etienne Lord

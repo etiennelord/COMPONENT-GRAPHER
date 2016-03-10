@@ -293,7 +293,7 @@ public class graph {
     * Brandes, U. (2001). A faster algorithm for betweenness centrality*. Journal of Mathematical Sociology, 25(2), 163-177.
     * See also:
     * Brandes, U. (2008). On variants of shortest-path betweenness centrality and their generic computation. Social Networks, 30(2), 136-145.
-    * @return 
+    * @return array of the betweenness of each node
     */
    public float[] Betweenness() {
         float[] Cb=new float[total_nodes];
@@ -353,7 +353,7 @@ public class graph {
    
     /**
     * Sarıyüce, A. E., Kaya, K., Saule, E., & Catalyürek, U. V. (2013, October). Incremental algorithms for closeness centrality. In IEEE International Conference on BigData.
-    * @return 
+    * @return array of the closeness of each node
     */
    public float[] Closeness() {
         float[] cc=new float[total_nodes];

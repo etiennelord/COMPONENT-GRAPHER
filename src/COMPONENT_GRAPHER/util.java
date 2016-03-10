@@ -465,5 +465,21 @@ public class util {
         }
         return filenames;
     }
-       
+
+    /**
+     * This filter a list of files according to a regex
+     * @param filenames
+     * @param regex
+     * @return 
+     */   
+     public static ArrayList<String>filter(ArrayList<String> filenames, String regex) {
+         ArrayList<String>tmp=new ArrayList<String>();  
+         Pattern p=Pattern.compile(regex);    
+         for (String s:filenames) {
+           Matcher m=p.matcher(s); 
+            if (m.find()) tmp.add(s); 
+         }
+         return tmp;
+     }
+   
 }

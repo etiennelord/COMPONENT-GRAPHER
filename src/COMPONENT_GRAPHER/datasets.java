@@ -690,7 +690,15 @@ String[][] charmatrix() {
           st_option.append("Max. iteration (if multiple states): "+this.maxiter);
       }      
      
-      compute_partition();            
+      compute_partition();  
+       //--Analyse graph
+          if (this.maxiter>1) {
+           System.out.println("======================= CREATING SUMMARY NETWORKS =============================");
+              analyze_multiple an=new analyze_multiple();
+               an.process_path(this.filename, this.maxiter);
+          }
+           System.out.println("===============================================================================");
+           
   }
   
   public void display_result(String filename) {
@@ -795,7 +803,6 @@ String[][] charmatrix() {
 //              //betweenness[i]=new ArrayList<Float>();
 //          }
           
-          //--Analyse graph
           
          
            System.out.println("================================ SUMMARY ======================================");
@@ -1062,7 +1069,7 @@ String[][] charmatrix() {
               System.out.println("===============================================================================");
           } catch(Exception e) {e.printStackTrace();}
       }
-      
+          
   }
   
    
